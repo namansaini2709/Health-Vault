@@ -1,0 +1,37 @@
+$ pnpm run lint && pnpm run build
+
+> shadcnui@ lint /workspace/shadcn-ui
+> eslint --quiet ./src
+
+
+> shadcnui@ build /workspace/shadcn-ui
+> vite build
+
+vite v5.4.19 building for production...
+transforming...
+✓ 1725 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                   0.86 kB │ gzip:   0.44 kB
+dist/assets/index-BtQ81sDA.css   70.91 kB │ gzip:  11.93 kB
+dist/assets/index-B-Rev21C.js   443.01 kB │ gzip: 135.64 kB
+✓ built in 5.46s
+$ pnpm run lint && pnpm run build
+
+
+> shadcnui@ lint /workspace/shadcn-ui
+> eslint --quiet ./src
+
+
+> shadcnui@ build /workspace/shadcn-ui
+> vite build
+
+vite v5.4.19 building for production...
+transforming...
+✓ 1725 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                   0.86 kB │ gzip:   0.44 kB
+dist/assets/index-CAiJYbZM.css   70.76 kB │ gzip:  11.92 kB
+dist/assets/index-N3lEyNz5.js   442.20 kB │ gzip: 135.50 kB
+✓ built in 6.13s
