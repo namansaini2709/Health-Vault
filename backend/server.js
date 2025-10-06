@@ -263,6 +263,9 @@ app.get('/api/patients', async (req, res) => {
 // Medical Records
 app.post('/api/medical-records', upload.single('file'), async (req, res) => {
   try {
+    console.log('--- File Upload Request ---');
+    console.log('Request Body:', req.body);
+    console.log('File Object:', req.file);
     // In a real implementation, you would upload the file to cloud storage
     // For this mock, we'll just save the filename
     const { category, summary, patientId } = req.body;
@@ -284,6 +287,8 @@ app.post('/api/medical-records', upload.single('file'), async (req, res) => {
 
     res.status(201).json(savedRecord);
   } catch (error) {
+    console.error('--- File Upload Error ---');
+    console.error(error);
     res.status(400).json({ error: error.message });
   }
 });
