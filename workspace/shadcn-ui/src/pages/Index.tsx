@@ -7,94 +7,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Heart, QrCode, Shield, Smartphone, UserCheck, Stethoscope, ArrowRight, CheckCircle, Zap, Crown, Bot, MapPin, Calendar, Check } from 'lucide-react';
 import { HealthVaultService } from '@/lib/healthVault';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import AIAssistant from '@/components/AIAssistant';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
 export default function Index() {
   const navigate = useNavigate();
-  const [isLoading, setIsLoading] = useState(false);
-
-  const handlePatientLogin = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setIsLoading(true);
-    
-    const formData = new FormData(e.currentTarget);
-    const email = formData.get('email') as string;
-    const name = formData.get('name') as string;
-    const phone = formData.get('phone') as string;
-    const dob = formData.get('dob') as string;
-    const emergency = formData.get('emergency') as string;
-
-    try {
-      const existingPatients = await HealthVaultService.getAllPatients();
-      let patient = existingPatients.find(p => p.email === email);
-
-      if (!patient) {
-        console.log('Creating new patient:', { name, email, phone, dateOfBirth: dob, emergencyContact: emergency });
-        patient = await HealthVaultService.createPatient({
-          name,
-          email,
-          phone,
-          dateOfBirth: dob,
-          emergencyContact: emergency
-        });
-        console.log('Patient created successfully:', patient);
-        toast.success('Welcome to HealthVault! Your account has been created.');
-      } else {
-        toast.success('Welcome back!');
-      }
-
-      console.log('Setting current user:', patient);
-      HealthVaultService.setCurrentUser(patient, 'patient');
-      console.log('Navigating to patient dashboard');
-      navigate('/patient-dashboard');
-    } catch (error) {
-      console.error('Login failed:', error);
-      toast.error('Login failed. Please try again.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleDoctorLogin = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setIsLoading(true);
-    
-    const formData = new FormData(e.currentTarget);
-    const email = formData.get('email') as string;
-    const name = formData.get('name') as string;
-    const specialty = formData.get('specialty') as string;
-    const license = formData.get('license') as string;
-
-    try {
-      let doctor = await HealthVaultService.getDoctorByEmail(email);
-
-      if (!doctor) {
-        console.log('Creating new doctor:', { name, email, specialty, license });
-        doctor = await HealthVaultService.createDoctor({
-          name,
-          email,
-          specialty,
-          license
-        });
-        console.log('Doctor created successfully:', doctor);
-        toast.success('Doctor account created successfully!');
-      } else {
-        toast.success('Welcome back, Dr. ' + doctor.name);
-      }
-
-      console.log('Setting current user:', doctor);
-      HealthVaultService.setCurrentUser(doctor, 'doctor');
-      console.log('Navigating to doctor dashboard');
-      navigate('/doctor-dashboard');
-    } catch (error) {
-      console.error('Doctor login failed:', error);
-      toast.error('Login failed. Please try again.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
@@ -143,10 +62,30 @@ export default function Index() {
               </div>
               
               <div className="flex flex-col sm:flex-row gap-4">
-                <Button size="lg" className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700">
-                  Get Started Free
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button size="lg" className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700">
+                      Get Started Free
+                      <ArrowRight className="ml-2 h-4 w-4" />
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Get Started</DialogTitle>
+                      <DialogDescription>
+                        Are you a patient or a provider?
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="grid grid-cols-2 gap-4">
+                      <Link to="/patient-register">
+                        <Button className="w-full">Patient Portal</Button>
+                      </Link>
+                      <Link to="/provider-register">
+                        <Button className="w-full">Provider Portal</Button>
+                      </Link>
+                    </div>
+                  </DialogContent>
+                </Dialog>
                 <Button variant="outline" size="lg">
                   Watch Demo
                 </Button>
@@ -375,113 +314,6 @@ export default function Index() {
               </CardContent>
             </Card>
           </div>
-        </div>
-      </section>
-
-      {/* Login Section */}
-      <section className="py-20 bg-white">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
-              Get Started Today
-            </h2>
-            <p className="text-xl text-gray-600">
-              Join the future of healthcare with HealthVault
-            </p>
-          </div>
-
-          <Card className="shadow-2xl border-0 overflow-hidden">
-            <CardContent className="p-0">
-              <Tabs defaultValue="patient" className="w-full">
-                <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-6">
-                  <TabsList className="grid w-full grid-cols-2 bg-white/20 backdrop-blur-sm">
-                    <TabsTrigger value="patient" className="flex items-center gap-2 data-[state=active]:bg-white data-[state=active]:text-blue-600">
-                      <Heart className="h-4 w-4" />
-                      Patient Portal
-                    </TabsTrigger>
-                    <TabsTrigger value="doctor" className="flex items-center gap-2 data-[state=active]:bg-white data-[state=active]:text-blue-600">
-                      <Stethoscope className="h-4 w-4" />
-                      Provider Access
-                    </TabsTrigger>
-                  </TabsList>
-                </div>
-                
-                <div className="p-8">
-                  <TabsContent value="patient" className="space-y-6 mt-0">
-                    <div className="text-center mb-6">
-                      <h3 className="text-2xl font-semibold text-gray-900 mb-2">Patient Dashboard</h3>
-                      <p className="text-gray-600">Manage your health records and share with providers instantly</p>
-                    </div>
-                    
-                    <form onSubmit={handlePatientLogin} className="space-y-4">
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label htmlFor="name" className="text-sm font-medium">Full Name</Label>
-                          <Input id="name" name="name" required className="h-12" />
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="email" className="text-sm font-medium">Email Address</Label>
-                          <Input id="email" name="email" type="email" required className="h-12" />
-                        </div>
-                      </div>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label htmlFor="phone" className="text-sm font-medium">Phone Number</Label>
-                          <Input id="phone" name="phone" type="tel" required className="h-12" />
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="dob" className="text-sm font-medium">Date of Birth</Label>
-                          <Input id="dob" name="dob" type="date" required className="h-12" />
-                        </div>
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="emergency" className="text-sm font-medium">Emergency Contact</Label>
-                        <Input id="emergency" name="emergency" placeholder="Name and phone number" required className="h-12" />
-                      </div>
-                      <Button type="submit" className="w-full h-12 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700" disabled={isLoading}>
-                        {isLoading ? 'Creating Account...' : 'Access Patient Dashboard'}
-                        <ArrowRight className="ml-2 h-4 w-4" />
-                      </Button>
-                    </form>
-                  </TabsContent>
-                  
-                  <TabsContent value="doctor" className="space-y-6 mt-0">
-                    <div className="text-center mb-6">
-                      <h3 className="text-2xl font-semibold text-gray-900 mb-2">Provider Portal</h3>
-                      <p className="text-gray-600">Access patient records securely with QR code scanning</p>
-                    </div>
-                    
-                    <form onSubmit={handleDoctorLogin} className="space-y-4">
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label htmlFor="doc-name" className="text-sm font-medium">Full Name</Label>
-                          <Input id="doc-name" name="name" required className="h-12" />
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="doc-email" className="text-sm font-medium">Email Address</Label>
-                          <Input id="doc-email" name="email" type="email" required className="h-12" />
-                        </div>
-                      </div>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label htmlFor="specialty" className="text-sm font-medium">Medical Specialty</Label>
-                          <Input id="specialty" name="specialty" placeholder="e.g., Cardiology" required className="h-12" />
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="license" className="text-sm font-medium">License Number</Label>
-                          <Input id="license" name="license" required className="h-12" />
-                        </div>
-                      </div>
-                      <Button type="submit" className="w-full h-12 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700" disabled={isLoading}>
-                        {isLoading ? 'Creating Account...' : 'Access Provider Dashboard'}
-                        <ArrowRight className="ml-2 h-4 w-4" />
-                      </Button>
-                    </form>
-                  </TabsContent>
-                </div>
-              </Tabs>
-            </CardContent>
-          </Card>
         </div>
       </section>
 

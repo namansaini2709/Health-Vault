@@ -54,6 +54,7 @@ const userSchema = new mongoose.Schema({
   phone: String,
   dateOfBirth: String,
   emergencyContact: String,
+  profilePictureUrl: String,
   qrCode: { type: String, unique: true },
   records: [{ type: mongoose.Schema.Types.ObjectId, ref: 'MedicalRecord' }],
   createdAt: { type: Date, default: Date.now },
@@ -80,6 +81,7 @@ const doctorSchema = new mongoose.Schema({
   email: { type: String, unique: true },
   specialty: String,
   license: String,
+  profilePictureUrl: String,
 }, { timestamps: true });
 
 const Doctor = mongoose.model('Doctor', doctorSchema);
@@ -110,6 +112,7 @@ app.post('/api/patients', async (req, res) => {
       phone: savedPatient.phone,
       dateOfBirth: savedPatient.dateOfBirth,
       emergencyContact: savedPatient.emergencyContact,
+      profilePictureUrl: savedPatient.profilePictureUrl,
       qrCode: savedPatient.qrCode,
       createdAt: savedPatient.createdAt,
       records: []
@@ -157,6 +160,7 @@ app.get('/api/patients/:id', async (req, res) => {
       phone: patient.phone,
       dateOfBirth: patient.dateOfBirth,
       emergencyContact: patient.emergencyContact,
+      profilePictureUrl: patient.profilePictureUrl,
       qrCode: patient.qrCode,
       createdAt: patient.createdAt,
       records: records.map(record => ({
@@ -255,12 +259,44 @@ app.get('/api/patients', async (req, res) => {
       res.json(formattedPatients);
     }
   } catch (error) {
-    console.error('Error fetching patients:', error);
+    res.status(400).json({ error: error.message });
+  }
+});
+
+app.put('/api/patients/:id', async (req, res) => {
+  try {
+    const patient = await User.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    if (!patient) {
+      return res.status(404).json({ error: 'Patient not found' });
+    }
+
+    const formattedPatient = {
+      id: patient._id.toString(),
+      name: patient.name,
+      email: patient.email,
+      phone: patient.phone,
+      dateOfBirth: patient.dateOfBirth,
+      emergencyContact: patient.emergencyContact,
+      profilePictureUrl: patient.profilePictureUrl,
+      qrCode: patient.qrCode,
+      createdAt: patient.createdAt,
+      records: patient.records
+    };
+
+    res.json(formattedPatient);
+  } catch (error) {
     res.status(400).json({ error: error.message });
   }
 });
 
 // Medical Records
+app.post('/api/upload-profile-picture', upload.single('file'), (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ error: 'No file uploaded.' });
+  }
+  res.status(201).json({ url: `/uploads/${req.file.filename}` });
+});
+
 app.post('/api/medical-records', upload.single('file'), async (req, res) => {
   try {
     // In a real implementation, you would upload the file to cloud storage
@@ -314,7 +350,8 @@ app.post('/api/doctors', async (req, res) => {
       name: savedDoctor.name,
       email: savedDoctor.email,
       specialty: savedDoctor.specialty,
-      license: savedDoctor.license
+      license: savedDoctor.license,
+      profilePictureUrl: savedDoctor.profilePictureUrl
     };
     
     console.log('Sending formatted doctor data:', formattedDoctor);
@@ -355,7 +392,9 @@ app.get('/api/doctors/:id', async (req, res) => {
       name: doctor.name,
       email: doctor.email,
       specialty: doctor.specialty,
-      license: doctor.license
+      license: doctor.license,
+      profilePictureUrl: doctor.profilePictureUrl,
+      profilePictureUrl: doctor.profilePictureUrl
     };
     
     console.log('Sending formatted doctor data:', formattedDoctor);
@@ -395,13 +434,34 @@ app.get('/api/doctors', async (req, res) => {
         name: doctor.name,
         email: doctor.email,
         specialty: doctor.specialty,
-        license: doctor.license
+        license: doctor.license,
+        profilePictureUrl: doctor.profilePictureUrl
       }));
       
       res.json(formattedDoctors);
     }
   } catch (error) {
     console.error('Error fetching doctors:', error);
+    res.status(400).json({ error: error.message });
+  }
+});
+
+app.put('/api/doctors/:id', async (req, res) => {
+  try {
+    const doctor = await Doctor.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    if (!doctor) {
+      return res.status(404).json({ error: 'Doctor not found' });
+    }
+    const formattedDoctor = {
+      id: doctor._id.toString(),
+      name: doctor.name,
+      email: doctor.email,
+      specialty: doctor.specialty,
+      license: doctor.license,
+      profilePictureUrl: doctor.profilePictureUrl
+    };
+    res.json(formattedDoctor);
+  } catch (error) {
     res.status(400).json({ error: error.message });
   }
 });

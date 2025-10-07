@@ -18,6 +18,7 @@ export interface Patient {
   phone: string;
   dateOfBirth: string;
   emergencyContact: string;
+  profilePictureUrl?: string;
   qrCode: string;
   records: MedicalRecord[];
   createdAt: string;
@@ -29,6 +30,7 @@ export interface Doctor {
   email: string;
   specialty: string;
   license: string;
+  profilePictureUrl?: string;
 }
 
 export class HealthVaultService {
@@ -66,6 +68,16 @@ export class HealthVaultService {
       console.error('Error response data:', error.response?.data);
       console.error('Error status:', error.response?.status);
       console.error('Error headers:', error.response?.headers);
+      throw error;
+    }
+  }
+
+  static async updatePatient(id: string, patientData: Partial<Patient>): Promise<Patient> {
+    try {
+      const response = await apiClient.put(`/patients/${id}`, patientData);
+      return response.data;
+    } catch (error) {
+      console.error('Error updating patient:', error);
       throw error;
     }
   }
@@ -125,6 +137,16 @@ export class HealthVaultService {
       return response.data;
     } catch (error) {
       console.error('Error creating doctor:', error);
+      throw error;
+    }
+  }
+
+  static async updateDoctor(id: string, doctorData: Partial<Doctor>): Promise<Doctor> {
+    try {
+      const response = await apiClient.put(`/doctors/${id}`, doctorData);
+      return response.data;
+    } catch (error) {
+      console.error('Error updating doctor:', error);
       throw error;
     }
   }

@@ -33,6 +33,7 @@ export default function PatientDashboard() {
       
       // The user object from getCurrentUser is now the full patient object
       const patientData = currentUser.user as Patient;
+      console.log("Patient data on dashboard:", patientData);
       setPatient(patientData);
       setRecords(patientData.records || []);
     };
@@ -188,7 +189,7 @@ export default function PatientDashboard() {
             <CardContent className="p-6">
               <div className="flex items-center space-x-4">
                 <Avatar className="h-16 w-16 border-2 border-white">
-                  <AvatarImage src="/images/Avatar.jpg" />
+                  {patient.profilePictureUrl && <AvatarImage src={`http://localhost:5000${patient.profilePictureUrl}`} />}
                   <AvatarFallback className="bg-white text-blue-600 text-lg font-semibold">
                     {patient.name.split(' ').map(n => n[0]).join('')}
                   </AvatarFallback>
@@ -394,7 +395,7 @@ export default function PatientDashboard() {
             <Card>
               <CardHeader className="text-center pb-2">
                 <Avatar className="h-20 w-20 mx-auto mb-4">
-                  <AvatarImage src="/images/Avatar.jpg" />
+                  {patient.profilePictureUrl && <AvatarImage src={`http://localhost:5000${patient.profilePictureUrl}`} />}
                   <AvatarFallback className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white text-xl">
                     {patient.name.split(' ').map(n => n[0]).join('')}
                   </AvatarFallback>
