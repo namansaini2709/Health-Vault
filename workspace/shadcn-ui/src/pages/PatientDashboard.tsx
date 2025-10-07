@@ -5,14 +5,16 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Progress } from '@/components/ui/progress';
-import { Upload, QrCode, FileText, Calendar, LogOut, Plus, User, Settings, Bell, Activity, Heart, Shield, Smartphone, Edit } from 'lucide-react';
+import { Upload, QrCode, FileText, Calendar, LogOut, Plus, User, Settings, Bell, Activity, Heart, Shield, Smartphone, Edit, Lock, Unlock } from 'lucide-react';
 import { HealthVaultService, Patient, MedicalRecord } from '@/lib/healthVault';
 import { AISummarizer } from '@/lib/aiSummarizer';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import FileUpload from '@/components/FileUpload';
 import QRGenerator from '@/components/QRGenerator';
-import RecordSummary from '@/components/RecordSummary';
+import PatientHealthSummary from '@/components/PatientHealthSummary';
+import EncryptedRecordSummary from '@/components/EncryptedRecordSummary';
+import { createEncryptedFile, generateEncryptionKey, keyToHexString, storeKeyInSession } from '@/lib/encryptionUtils';
 
 type RecordCategory = 'prescription' | 'lab-result' | 'scan' | 'report' | 'other';
 
@@ -30,7 +32,7 @@ export default function PatientDashboard() {
         navigate('/');
         return;
       }
-      
+
       // The user object from getCurrentUser is now the full patient object
       const patientData = currentUser.user as Patient;
       console.log("Patient data on dashboard:", patientData);
@@ -54,15 +56,7 @@ export default function PatientDashboard() {
       return;
     }
 
-    console.log('Starting upload process for file:', {
-      name: file.name,
-      size: file.size,
-      type: file.type,
-      patientId: patient.id,
-      category
-    });
-
-    // Validate file before upload
+    // Validate file size
     const maxSize = 10 * 1024 * 1024; // 10MB
     if (file.size > maxSize) {
       toast.error(`File size too large. Maximum allowed size is ${maxSize / (1024 * 1024)}MB`);
@@ -70,46 +64,68 @@ export default function PatientDashboard() {
     }
 
     try {
-      toast.loading('Preparing to upload file...');
-      
+      toast.loading('Encrypting file...');
+
+      console.log('Selected file:', {
+        name: file.name,
+        type: file.type,
+        size: file.size
+      });
+
+      // Generate encryption key and encrypt file
+      const encryptionKey = await generateEncryptionKey();
+      const { encryptedFile, encryptionMetadata } = await createEncryptedFile(file, encryptionKey);
+
+      console.log('After encryption:', {
+        encryptedFileName: encryptedFile.name,
+        encryptedFileSize: encryptedFile.size,
+        metadata: encryptionMetadata
+      });
+
+      // Convert key to hex string for storage
+      const encryptionKeyHex = keyToHexString(encryptionKey);
+
+      console.log('Encryption metadata before upload:', encryptionMetadata);
+      console.log('Encryption key hex:', encryptionKeyHex);
+
+      // Generate AI summary
       const summary = AISummarizer.summarizeRecord({
         fileName: file.name,
         category: category as RecordCategory,
       } as MedicalRecord);
 
-      console.log('AI Summary generated:', summary);
+      // Upload encrypted file with encryption metadata to backend
+      toast.loading('Uploading encrypted file...');
+      const newRecord = await HealthVaultService.addMedicalRecord(
+        patient.id,
+        encryptedFile,
+        category as RecordCategory,
+        summary,
+        encryptionKeyHex, // Send encryption key to backend
+        encryptionMetadata // Send metadata to backend
+      );
 
-      toast.loading('Uploading file to storage...');
-      const newRecord = await HealthVaultService.addMedicalRecord(patient.id, file, category as RecordCategory, summary);
+      console.log('Record uploaded successfully:', newRecord);
 
-      console.log('New record created:', newRecord);
+      // Store encryption key in sessionStorage for current session
+      storeKeyInSession(encryptionKeyHex, newRecord.id);
 
+      // Update local state
       setRecords([...records, newRecord]);
-      
+
+      // Refresh patient data from backend
       const updatedPatient = await HealthVaultService.getPatient(patient.id);
       if (updatedPatient) {
         setPatient(updatedPatient);
-        console.log('Patient records updated in state');
       }
 
-      toast.dismiss(); // Remove loading toast
-      toast.success('Medical record uploaded successfully!');
+      toast.dismiss();
+      toast.success('Medical record securely encrypted and uploaded!');
       setShowUpload(false);
     } catch (error: any) {
       console.error('Failed to upload file:', error);
-      
-      toast.dismiss(); // Remove loading toast
-      
-      let errorMessage = 'Upload failed: ';
-      if (error.message) {
-        errorMessage += error.message;
-      } else if (error.status) {
-        errorMessage += `Server error (status: ${error.status})`;
-      } else {
-        errorMessage += 'An unknown error occurred';
-      }
-      
-      toast.error(errorMessage);
+      toast.dismiss();
+      toast.error(error.message || 'Upload failed. Please try again.');
     }
   };
 
@@ -122,6 +138,26 @@ export default function PatientDashboard() {
       'other': 'bg-gray-100 text-gray-800'
     };
     return colors[category as keyof typeof colors] || colors.other;
+  };
+
+  const handleDeleteRecord = async (recordId: string) => {
+    if (!patient) return;
+
+    try {
+      await HealthVaultService.deleteMedicalRecord(recordId);
+
+      // Update local state
+      setRecords(records.filter(r => r.id !== recordId));
+
+      // Update patient object with new records list
+      const updatedPatient = { ...patient, records: records.filter(r => r.id !== recordId) };
+      setPatient(updatedPatient);
+
+      toast.success('Record deleted successfully');
+    } catch (error) {
+      console.error('Error deleting record:', error);
+      toast.error('Failed to delete record');
+    }
   };
 
   const formatDate = (dateString: string) => {
@@ -335,9 +371,12 @@ export default function PatientDashboard() {
               
               <TabsContent value="records" className="space-y-4">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                  <h2 className="text-xl font-semibold">Medical Records</h2>
+                  <h2 className="text-xl font-semibold flex items-center gap-2">
+                    <Lock className="h-5 w-5" />
+                    Encrypted Medical Records
+                  </h2>
                   <Button onClick={() => setShowUpload(true)} size="sm">
-                    <Plus className="h-4 w-4 mr-2" />
+                    <Upload className="h-4 w-4 mr-2" />
                     Upload Record
                   </Button>
                 </div>
@@ -345,7 +384,7 @@ export default function PatientDashboard() {
                 {records.length === 0 ? (
                   <Card>
                     <CardContent className="py-16 text-center">
-                      <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                      <Lock className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                       <h3 className="text-lg font-medium text-gray-900 mb-2">No medical records yet</h3>
                       <p className="text-gray-600 mb-4">Upload your first medical document to get started</p>
                       <Button onClick={() => setShowUpload(true)}>
@@ -355,36 +394,12 @@ export default function PatientDashboard() {
                     </CardContent>
                   </Card>
                 ) : (
-                  <div className="space-y-4">
-                    {records.map((record) => (
-                      <Card key={record.id}>
-                        <CardContent className="p-4 sm:p-6">
-                          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
-                            <div className="flex-1 min-w-0">
-                              <h3 className="font-medium text-gray-900 mb-1 truncate">{record.fileName}</h3>
-                              <div className="flex items-center gap-2 text-sm text-gray-600 mb-3">
-                                <Calendar className="h-4 w-4" />
-                                {formatDate(record.uploadDate)}
-                              </div>
-                              {record.summary && (
-                                <div className="bg-blue-50 p-3 rounded-lg">
-                                  <p className="text-sm text-blue-800">{record.summary}</p>
-                                </div>
-                              )}
-                            </div>
-                            <Badge className={getCategoryColor(record.category)}>
-                              {record.category.replace('-', ' ')}
-                            </Badge>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
+                  <EncryptedRecordSummary records={records} patientId={patient.id} onDelete={handleDeleteRecord} />
                 )}
               </TabsContent>
               
               <TabsContent value="insights">
-                <RecordSummary records={records} />
+                <PatientHealthSummary records={records} />
               </TabsContent>
             </Tabs>
           </div>

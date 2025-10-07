@@ -9,11 +9,73 @@ import { Heart, QrCode, Shield, Smartphone, UserCheck, Stethoscope, ArrowRight, 
 import { HealthVaultService } from '@/lib/healthVault';
 import { useNavigate, Link } from 'react-router-dom';
 import { toast } from 'sonner';
-import AIAssistant from '@/components/AIAssistant';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import axios from 'axios';
 
 export default function Index() {
   const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handlePatientLogin = async (e) => {
+    e.preventDefault();
+    setIsLoading(true);
+    
+    try {
+      const formData = new FormData(e.target);
+      const patientData = {
+        name: formData.get('name'),
+        email: formData.get('email'),
+        phone: formData.get('phone'),
+        dateOfBirth: formData.get('dob'),
+        emergencyContact: formData.get('emergency')
+      };
+
+      const response = await axios.post('http://localhost:5000/api/patients', patientData);
+      const patient = response.data;
+
+      // Store patient info in localStorage (simulating auth)
+      localStorage.setItem('healthvault_patient_id', patient.id);
+      localStorage.setItem('healthvault_user_type', 'patient');
+      
+      toast.success("Patient account created successfully!");
+      navigate('/patient-dashboard');
+    } catch (error) {
+      console.error('Error creating patient:', error);
+      toast.error("Failed to create patient account. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleDoctorLogin = async (e) => {
+    e.preventDefault();
+    setIsLoading(true);
+    
+    try {
+      const formData = new FormData(e.target);
+      const doctorData = {
+        name: formData.get('name'),
+        email: formData.get('email'),
+        specialty: formData.get('specialty'),
+        license: formData.get('license')
+      };
+
+      const response = await axios.post('http://localhost:5000/api/doctors', doctorData);
+      const doctor = response.data;
+
+      // Store doctor info in localStorage (simulating auth)
+      localStorage.setItem('healthvault_doctor_id', doctor.id);
+      localStorage.setItem('healthvault_user_type', 'doctor');
+      
+      toast.success("Provider account created successfully!");
+      navigate('/doctor-dashboard');
+    } catch (error) {
+      console.error('Error creating doctor:', error);
+      toast.error("Failed to create provider account. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
@@ -30,10 +92,10 @@ export default function Index() {
               </span>
             </div>
             <div className="hidden md:flex items-center space-x-8">
-              <a href="#features" className="text-gray-600 hover:text-gray-900 transition-colors">Features</a>
-              <a href="#pricing" className="text-gray-600 hover:text-gray-900 transition-colors">Pricing</a>
-              <a href="#security" className="text-gray-600 hover:text-gray-900 transition-colors">Security</a>
-              <Button variant="outline" size="sm">Contact</Button>
+              <a onClick={() => navigate('/features')} className="text-gray-600 hover:text-gray-900 transition-colors cursor-pointer">Features</a>
+              <a onClick={() => navigate('/pricing')} className="text-gray-600 hover:text-gray-900 transition-colors cursor-pointer">Pricing</a>
+              <a onClick={() => navigate('/security')} className="text-gray-600 hover:text-gray-900 transition-colors cursor-pointer">Security</a>
+              <Button variant="outline" size="sm" onClick={() => navigate('/login')}>Login</Button>
             </div>
           </div>
         </div>
@@ -157,7 +219,206 @@ export default function Index() {
         </div>
       </section>
 
+      {/* Features Section */}
+      <section id="features" className="py-20 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
+              Everything You Need for Digital Health Records
+            </h2>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+              Secure, accessible, and intelligent healthcare management at your fingertips
+            </p>
+          </div>
 
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {/* Feature 1 */}
+            <Card className="border-2 hover:border-blue-500 transition-all duration-300 hover:shadow-xl">
+              <CardHeader>
+                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
+                  <QrCode className="h-6 w-6 text-blue-600" />
+                </div>
+                <CardTitle>QR Code Access</CardTitle>
+                <CardDescription>
+                  Instantly share your medical history with healthcare providers using a secure QR code
+                </CardDescription>
+              </CardHeader>
+            </Card>
+
+            {/* Feature 2 */}
+            <Card className="border-2 hover:border-green-500 transition-all duration-300 hover:shadow-xl">
+              <CardHeader>
+                <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-4">
+                  <Shield className="h-6 w-6 text-green-600" />
+                </div>
+                <CardTitle>End-to-End Encryption</CardTitle>
+                <CardDescription>
+                  Your medical records are encrypted with bank-level security, ensuring complete privacy
+                </CardDescription>
+              </CardHeader>
+            </Card>
+
+            {/* Feature 3 */}
+            <Card className="border-2 hover:border-purple-500 transition-all duration-300 hover:shadow-xl">
+              <CardHeader>
+                <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-4">
+                  <Bot className="h-6 w-6 text-purple-600" />
+                </div>
+                <CardTitle>AI-Powered Insights</CardTitle>
+                <CardDescription>
+                  Get intelligent health summaries and personalized recommendations from AI analysis
+                </CardDescription>
+              </CardHeader>
+            </Card>
+
+            {/* Feature 4 */}
+            <Card className="border-2 hover:border-orange-500 transition-all duration-300 hover:shadow-xl">
+              <CardHeader>
+                <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center mb-4">
+                  <Smartphone className="h-6 w-6 text-orange-600" />
+                </div>
+                <CardTitle>Access Anywhere</CardTitle>
+                <CardDescription>
+                  View your medical records from any device, anywhere in the world, 24/7
+                </CardDescription>
+              </CardHeader>
+            </Card>
+
+            {/* Feature 5 */}
+            <Card className="border-2 hover:border-red-500 transition-all duration-300 hover:shadow-xl">
+              <CardHeader>
+                <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center mb-4">
+                  <UserCheck className="h-6 w-6 text-red-600" />
+                </div>
+                <CardTitle>Patient Control</CardTitle>
+                <CardDescription>
+                  You decide who can access your records and for how long - complete control over your data
+                </CardDescription>
+              </CardHeader>
+            </Card>
+
+            {/* Feature 6 */}
+            <Card className="border-2 hover:border-indigo-500 transition-all duration-300 hover:shadow-xl">
+              <CardHeader>
+                <div className="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center mb-4">
+                  <Stethoscope className="h-6 w-6 text-indigo-600" />
+                </div>
+                <CardTitle>Provider Dashboard</CardTitle>
+                <CardDescription>
+                  Healthcare providers get instant access to authorized patient records with analytics
+                </CardDescription>
+              </CardHeader>
+            </Card>
+          </div>
+        </div>
+      </section>
+
+      {/* Pricing Section */}
+      <section id="pricing" className="py-20 bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
+              Simple, Transparent Pricing
+            </h2>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+              Choose the plan that's right for you
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+            {/* Basic Plan */}
+            <Card className="border-2 hover:shadow-xl transition-all duration-300">
+              <CardHeader>
+                <CardTitle className="text-2xl">Basic Plan</CardTitle>
+                <div className="mt-4">
+                  <span className="text-4xl font-bold">Free</span>
+                </div>
+                <p className="text-sm text-gray-500 mt-2">Free forever</p>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <p className="text-gray-600 text-sm">Perfect for personal health record management</p>
+                <ul className="space-y-3">
+                  <li className="flex items-start gap-2">
+                    <Check className="h-5 w-5 text-green-500 mt-0.5" />
+                    <span>Unlimited medical record storage</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Check className="h-5 w-5 text-green-500 mt-0.5" />
+                    <span>QR code generation and sharing</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Check className="h-5 w-5 text-green-500 mt-0.5" />
+                    <span>Basic AI health insights</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Check className="h-5 w-5 text-green-500 mt-0.5" />
+                    <span>End-to-end encryption</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Check className="h-5 w-5 text-green-500 mt-0.5" />
+                    <span>Mobile responsive design</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Check className="h-5 w-5 text-green-500 mt-0.5" />
+                    <span>Basic multilingual support</span>
+                  </li>
+                </ul>
+                <Button className="w-full mt-6" variant="outline" onClick={() => navigate('/patient-register')}>Get Started Free</Button>
+              </CardContent>
+            </Card>
+
+            {/* Premium Plan */}
+            <Card className="border-2 border-blue-500 hover:shadow-2xl transition-all duration-300 relative">
+              <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
+                <Badge className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-4 py-1">
+                  Most Popular
+                </Badge>
+              </div>
+              <CardHeader>
+                <CardTitle className="text-2xl">Premium Plan</CardTitle>
+                <div className="mt-4">
+                  <span className="text-4xl font-bold">$9.99</span>
+                  <span className="text-gray-600"> per month</span>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <p className="text-gray-600 text-sm">Advanced AI features with appointment booking</p>
+                <ul className="space-y-3">
+                  <li className="flex items-start gap-2">
+                    <Check className="h-5 w-5 text-green-500 mt-0.5" />
+                    <span className="font-medium">Everything in Basic Plan</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Check className="h-5 w-5 text-green-500 mt-0.5" />
+                    <span className="font-medium">Advanced AI Assistant</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Check className="h-5 w-5 text-green-500 mt-0.5" />
+                    <span>Doctor search within 10 km radius</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Check className="h-5 w-5 text-green-500 mt-0.5" />
+                    <span>Automated appointment booking</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Check className="h-5 w-5 text-green-500 mt-0.5" />
+                    <span>Priority customer support</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Check className="h-5 w-5 text-green-500 mt-0.5" />
+                    <span>Advanced health analytics</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Check className="h-5 w-5 text-green-500 mt-0.5" />
+                    <span>Smart health reminders</span>
+                  </li>
+                </ul>
+                <Button className="w-full mt-6 bg-gradient-to-r from-blue-600 to-indigo-600" onClick={() => navigate('/patient-register')}>Upgrade to Premium</Button>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </section>
 
       {/* Footer */}
       <footer className="bg-gray-900 text-white py-12">
@@ -211,9 +472,6 @@ export default function Index() {
           </div>
         </div>
       </footer>
-
-      {/* AI Assistant */}
-      <AIAssistant isPremium={false} />
     </div>
   );
 }

@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { QrCode, LogOut, Search, User, FileText, Calendar } from 'lucide-react';
+import { QrCode, LogOut, Search, User, FileText, Calendar, Unlock, Lock, RefreshCw, Brain } from 'lucide-react';
 import { HealthVaultService, Doctor, Patient, MedicalRecord } from '@/lib/healthVault';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -15,6 +15,7 @@ import QRScanner from '@/components/QRScanner';
 import RecordSummary from '@/components/RecordSummary';
 import DashboardStats from '@/components/DashboardStats';
 import AIInsights from '@/components/AIInsights';
+import { summarizePatientRecords } from '@/lib/apiService';
 
 export default function DoctorDashboard() {
   const navigate = useNavigate();
@@ -24,6 +25,7 @@ export default function DoctorDashboard() {
   const [searchQuery, setSearchQuery] = useState('');
   const [allPatients, setAllPatients] = useState<Patient[]>([]);
   const [recordForSummary, setRecordForSummary] = useState<MedicalRecord | null>(null);
+  const [isRegenerating, setIsRegenerating] = useState(false);
 
   useEffect(() => {
     const fetchCurrentUser = async () => {
@@ -36,8 +38,19 @@ export default function DoctorDashboard() {
       const doctorData = currentUser.user as Doctor;
       setDoctor(doctorData);
 
-      const patients = await HealthVaultService.getAllPatients();
-      setAllPatients(patients);
+      // Fetch all patients without records first
+      const patientsWithoutRecords = await HealthVaultService.getAllPatients();
+      
+      // For each patient, fetch their medical records separately
+      const patientsWithRecords = await Promise.all(
+        patientsWithoutRecords.map(async (patient) => {
+          const records = await HealthVaultService.getMedicalRecords(patient.id);
+          // Return a new patient object with records
+          return { ...patient, records };
+        })
+      );
+      
+      setAllPatients(patientsWithRecords);
     };
 
     fetchCurrentUser();
@@ -55,7 +68,11 @@ export default function DoctorDashboard() {
       const patient = await HealthVaultService.getPatientByQRCode(qrCode);
       console.log('Patient retrieved:', patient);
       if (patient) {
-        setSelectedPatient(patient);
+        // Fetch the patient's medical records
+        const records = await HealthVaultService.getMedicalRecords(patient.id);
+        // Return patient object with records
+        const patientWithRecords = { ...patient, records };
+        setSelectedPatient(patientWithRecords);
         setShowScanner(false);
         toast.success(`Accessing records for ${patient.name}`);
       } else {
@@ -68,10 +85,19 @@ export default function DoctorDashboard() {
   };
 
   const handlePatientSearch = async (patientId: string) => {
-    const patient = await HealthVaultService.getPatient(patientId);
-    if (patient) {
-      setSelectedPatient(patient);
-      toast.success(`Viewing records for ${patient.name}`);
+    try {
+      const patient = await HealthVaultService.getPatient(patientId);
+      if (patient) {
+        // Fetch the patient's medical records
+        const records = await HealthVaultService.getMedicalRecords(patientId);
+        // Return patient object with records
+        const patientWithRecords = { ...patient, records };
+        setSelectedPatient(patientWithRecords);
+        toast.success(`Viewing records for ${patient.name}`);
+      }
+    } catch (error) {
+      console.error('Error fetching patient records:', error);
+      toast.error('Error fetching patient details.');
     }
   };
 
@@ -97,6 +123,35 @@ export default function DoctorDashboard() {
       'other': 'bg-gray-100 text-gray-800'
     };
     return colors[category as keyof typeof colors] || colors.other;
+  };
+
+  // Doctors cannot decrypt patient files - patient privacy protection
+  const handleViewEncryptedFile = (record: MedicalRecord) => {
+    toast.error('Patient files are encrypted for privacy. Only the patient can decrypt and view their files.');
+  };
+
+  const handleRegenerateAllSummaries = async () => {
+    if (!selectedPatient) return;
+
+    setIsRegenerating(true);
+    toast.loading('Regenerating AI summaries for all records...');
+
+    try {
+      const result = await summarizePatientRecords(selectedPatient.id);
+
+      // Refresh the patient data to get updated summaries
+      const updatedPatient = await HealthVaultService.getPatient(selectedPatient.id);
+      if (updatedPatient) {
+        setSelectedPatient(updatedPatient);
+      }
+
+      toast.success(`Successfully regenerated ${result.totalRecords} AI summaries!`);
+    } catch (error) {
+      console.error('Error regenerating summaries:', error);
+      toast.error('Failed to regenerate AI summaries');
+    } finally {
+      setIsRegenerating(false);
+    }
   };
 
   if (!doctor) {
@@ -192,35 +247,55 @@ export default function DoctorDashboard() {
                     ) : (
                       <div className="space-y-4">
                         {selectedPatient.records.map((record: MedicalRecord) => (
-                          <a href={`http://localhost:5000${record.fileUrl}`} target="_blank" rel="noopener noreferrer" key={record.id}>
-                            <Card className="hover:bg-gray-50">
-                              <CardContent className="p-6">
-                                <div className="flex justify-between items-start mb-3">
-                                  <div className="flex-1">
-                                    <h3 className="font-medium text-gray-900 mb-1">{record.fileName}</h3>
-                                    <div className="flex items-center gap-2 text-sm text-gray-600">
-                                      <Calendar className="h-4 w-4" />
-                                      {formatDate(record.uploadDate)}
-                                    </div>
+                          <Card key={record.id} className="hover:bg-gray-50">
+                            <CardContent className="p-6">
+                              <div className="flex justify-between items-start mb-3">
+                                <div className="flex-1">
+                                  <div className="flex items-center gap-2 mb-1">
+                                    <h3 className="font-medium text-gray-900">{record.fileName}</h3>
+                                    <Lock className="h-4 w-4 text-green-600" title="Patient-encrypted file" />
                                   </div>
-                                  <Badge className={getCategoryColor(record.category)}>
-                                    {record.category.replace('-', ' ')}
-                                  </Badge>
+                                  <div className="flex items-center gap-2 text-sm text-gray-600">
+                                    <Calendar className="h-4 w-4" />
+                                    {formatDate(record.uploadDate)}
+                                  </div>
                                 </div>
-                                                              {record.summary && (
-                                                                <div className="bg-blue-50 p-3 rounded-lg">
-                                                                  <p className="text-sm text-blue-800">{record.summary}</p>
-                                                                </div>
-                                                              )}
-                                                              <Button variant="link" size="sm" className="p-0 h-auto mt-2" onClick={() => setRecordForSummary(record)}>View AI Summary</Button>
-                                                            </CardContent>                            </Card>
-                          </a>
+                                <Badge className={getCategoryColor(record.category)}>
+                                  {record.category.replace('-', ' ')}
+                                </Badge>
+                              </div>
+                              {record.summary && (
+                                <div className="bg-blue-50 p-3 rounded-lg mb-2">
+                                  <p className="text-sm text-blue-800">{record.summary}</p>
+                                </div>
+                              )}
+                              <Button variant="link" size="sm" className="p-0 h-auto" onClick={() => toast.info('View Report feature coming soon!')}>
+                                <FileText className="h-3 w-3 mr-1" />
+                                View Report (Coming Soon)
+                              </Button>
+                            </CardContent>
+                          </Card>
                         ))}
                       </div>
                     )}
                   </TabsContent>
                   
-                  <TabsContent value="summary">
+                  <TabsContent value="summary" className="space-y-4">
+                    <div className="flex justify-between items-center">
+                      <div className="flex items-center gap-2">
+                        <Brain className="h-5 w-5 text-purple-600" />
+                        <h3 className="text-lg font-semibold">AI-Powered Health Insights</h3>
+                      </div>
+                      <Button
+                        onClick={handleRegenerateAllSummaries}
+                        disabled={isRegenerating || selectedPatient.records.length === 0}
+                        variant="outline"
+                        size="sm"
+                      >
+                        <RefreshCw className={`h-4 w-4 mr-2 ${isRegenerating ? 'animate-spin' : ''}`} />
+                        {isRegenerating ? 'Regenerating...' : 'Regenerate All'}
+                      </Button>
+                    </div>
                     <RecordSummary records={selectedPatient.records} />
                   </TabsContent>
                 </Tabs>
@@ -313,16 +388,46 @@ export default function DoctorDashboard() {
                 <CardTitle>Quick Stats</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span className="text-sm text-gray-600">Total Patients</span>
-                    <span className="font-medium">{allPatients.length}</span>
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center p-3 bg-blue-50 rounded-lg">
+                    <div>
+                      <p className="text-xs text-blue-600 font-medium">Total Patients</p>
+                      <p className="text-2xl font-bold text-blue-700">{allPatients.length}</p>
+                    </div>
+                    <User className="h-8 w-8 text-blue-600" />
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm text-gray-600">Total Records</span>
-                    <span className="font-medium">
-                      {allPatients.reduce((sum, p) => sum + p.records.length, 0)}
-                    </span>
+                  <div className="flex justify-between items-center p-3 bg-green-50 rounded-lg">
+                    <div>
+                      <p className="text-xs text-green-600 font-medium">Total Records</p>
+                      <p className="text-2xl font-bold text-green-700">
+                        {allPatients.reduce((sum, p) => sum + p.records.length, 0)}
+                      </p>
+                    </div>
+                    <FileText className="h-8 w-8 text-green-600" />
+                  </div>
+                  <div className="flex justify-between items-center p-3 bg-purple-50 rounded-lg">
+                    <div>
+                      <p className="text-xs text-purple-600 font-medium">Avg Records/Patient</p>
+                      <p className="text-2xl font-bold text-purple-700">
+                        {allPatients.length > 0
+                          ? (allPatients.reduce((sum, p) => sum + p.records.length, 0) / allPatients.length).toFixed(1)
+                          : '0'}
+                      </p>
+                    </div>
+                    <Calendar className="h-8 w-8 text-purple-600" />
+                  </div>
+                  <div className="flex justify-between items-center p-3 bg-orange-50 rounded-lg">
+                    <div>
+                      <p className="text-xs text-orange-600 font-medium">Recent Uploads</p>
+                      <p className="text-2xl font-bold text-orange-700">
+                        {allPatients.reduce((sum, p) =>
+                          sum + p.records.filter(r =>
+                            new Date(r.uploadDate) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+                          ).length, 0
+                        )}
+                      </p>
+                    </div>
+                    <FileText className="h-8 w-8 text-orange-600" />
                   </div>
                 </div>
               </CardContent>

@@ -4,12 +4,14 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import ProfilePictureUpload from "@/components/ProfilePictureUpload";
 import { useGoogleLogin } from "@react-oauth/google";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { HealthVaultService } from "@/lib/healthVault";
 import { toast } from "sonner";
+import PasswordStrength from "@/components/PasswordStrength";
 
 const PatientRegister = () => {
   const navigate = useNavigate();
@@ -18,8 +20,12 @@ const PatientRegister = () => {
   const [phone, setPhone] = useState("");
   const [dateOfBirth, setDateOfBirth] = useState("");
   const [emergencyContact, setEmergencyContact] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [profilePicture, setProfilePicture] = useState(null);
   const [user, setUser] = useState(null);
+  const [showDuplicateDialog, setShowDuplicateDialog] = useState(false);
+  const [existingPatient, setExistingPatient] = useState(null);
 
   const login = useGoogleLogin({
     onSuccess: (codeResponse) => setUser(codeResponse),
@@ -66,10 +72,20 @@ const PatientRegister = () => {
 
   const handleRegister = async (e) => {
     e.preventDefault();
+
+    // Validate all required fields
+    if (!name || !email || !phone || !dateOfBirth || !emergencyContact || !password || !confirmPassword) {
+      toast.error("All fields are required");
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      toast.error("Passwords do not match");
+      return;
+    }
     try {
       let profilePictureUrl = "";
       if (profilePicture) {
-        console.log("Profile picture selected:", profilePicture);
         const formData = new FormData();
         formData.append("file", profilePicture);
         const response = await axios.post("http://localhost:5000/api/upload-profile-picture", formData, {
@@ -82,23 +98,25 @@ const PatientRegister = () => {
       }
 
       let patient = (await HealthVaultService.getAllPatients()).find(p => p.email === email);
-      if (!patient) {
-        console.log("Creating new patient with profile picture URL:", profilePictureUrl);
-        patient = await HealthVaultService.createPatient({
-          name,
-          email,
-          phone,
-          emergencyContact,
-          dateOfBirth,
-          profilePictureUrl,
-        });
-        toast.success("Registration successful!");
-      } else {
-        if (profilePictureUrl) {
-          patient = await HealthVaultService.updatePatient(patient.id, { profilePictureUrl });
-        }
-        toast.success("Welcome back!");
+      if (patient) {
+        // User already exists - show dialog
+        setExistingPatient(patient);
+        setShowDuplicateDialog(true);
+        return;
       }
+
+      // Create new patient
+      console.log("Creating new patient with profile picture URL:", profilePictureUrl);
+      patient = await HealthVaultService.createPatient({
+        name,
+        email,
+        phone,
+        emergencyContact,
+        dateOfBirth,
+        profilePictureUrl,
+        password,
+      });
+      toast.success("Registration successful!");
 
       HealthVaultService.setCurrentUser(patient, 'patient');
       navigate("/patient-dashboard");
@@ -118,24 +136,33 @@ const PatientRegister = () => {
         <CardContent>
           <form className="space-y-4" onSubmit={handleRegister}>
             <div className="space-y-2">
-              <Label htmlFor="name">Name</Label>
-              <Input id="name" placeholder="Enter your name" value={name} onChange={(e) => setName(e.target.value)} />
+              <Label htmlFor="name">Name <span className="text-red-500">*</span></Label>
+              <Input id="name" placeholder="Enter your name" value={name} onChange={(e) => setName(e.target.value)} required />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" placeholder="Enter your email" value={email} onChange={(e) => setEmail(e.target.value)} />
+              <Label htmlFor="email">Email <span className="text-red-500">*</span></Label>
+              <Input id="email" type="email" placeholder="Enter your email" value={email} onChange={(e) => setEmail(e.target.value)} required />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="phone">Phone Number</Label>
-              <Input id="phone" placeholder="Enter your phone number" value={phone} onChange={(e) => setPhone(e.target.value)} />
+              <Label htmlFor="phone">Phone Number <span className="text-red-500">*</span></Label>
+              <Input id="phone" placeholder="Enter your phone number" value={phone} onChange={(e) => setPhone(e.target.value)} required />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="date-of-birth">Date of Birth</Label>
-              <Input id="date-of-birth" type="date" value={dateOfBirth} onChange={(e) => setDateOfBirth(e.target.value)} />
+              <Label htmlFor="date-of-birth">Date of Birth <span className="text-red-500">*</span></Label>
+              <Input id="date-of-birth" type="date" value={dateOfBirth} onChange={(e) => setDateOfBirth(e.target.value)} required />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="emergency-contact">Emergency Contact</Label>
-              <Input id="emergency-contact" placeholder="Enter your emergency contact" value={emergencyContact} onChange={(e) => setEmergencyContact(e.target.value)} />
+              <Label htmlFor="emergency-contact">Emergency Contact <span className="text-red-500">*</span></Label>
+              <Input id="emergency-contact" placeholder="Enter your emergency contact" value={emergencyContact} onChange={(e) => setEmergencyContact(e.target.value)} required />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="password">Password <span className="text-red-500">*</span></Label>
+              <Input id="password" type="password" placeholder="Enter your password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+              <PasswordStrength password={password} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="confirm-password">Confirm Password <span className="text-red-500">*</span></Label>
+              <Input id="confirm-password" type="password" placeholder="Confirm your password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required />
             </div>
             <div className="space-y-2">
               <ProfilePictureUpload onFileSelect={setProfilePicture} />
@@ -150,6 +177,26 @@ const PatientRegister = () => {
           <Button onClick={() => login()} className="w-full">Sign in with Google</Button>
         </CardContent>
       </Card>
+
+      {/* Duplicate User Dialog */}
+      <Dialog open={showDuplicateDialog} onOpenChange={setShowDuplicateDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Account Already Exists</DialogTitle>
+            <DialogDescription>
+              You are already registered as a user with this email. Would you like to login instead?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex gap-2">
+            <Button variant="outline" onClick={() => setShowDuplicateDialog(false)}>
+              Cancel
+            </Button>
+            <Button onClick={() => navigate("/login")}>
+              Go to Login
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

@@ -3,7 +3,37 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Upload, X, FileText } from 'lucide-react';
+import { Upload, X, FileText, Lock, Unlock } from 'lucide-react';
+import { toast } from 'sonner';
+
+// Simple client-side encryption/decryption functions
+// In a real application, use a proper library like Web Crypto API
+const encryptFile = async (file: File): Promise<Blob> => {
+  // In a real implementation, use proper encryption with Web Crypto API
+  // This is a simplified version to demonstrate the concept
+  
+  // Convert the file to an ArrayBuffer
+  const buffer = await file.arrayBuffer();
+  
+  // Using a simple XOR encryption with a generated key for demonstration
+  // In production, implement proper encryption using Web Crypto API
+  const key = crypto.getRandomValues(new Uint8Array(16));
+  
+  const encryptedBuffer = new Uint8Array(buffer);
+  for (let i = 0; i < encryptedBuffer.length; i++) {
+    encryptedBuffer[i] ^= key[i % key.length];
+  }
+  
+  // In a real app, the key should be securely derived and handled
+  // For now, we're just demonstrating the principle
+  return new Blob([encryptedBuffer], { type: file.type });
+};
+
+const generateEncryptionKey = (): string => {
+  // In a real implementation, this would be properly generated
+  // and either stored in a secure vault or derived from user credentials
+  return 'demo-key-' + Math.random().toString(36).substring(2, 15);
+};
 
 interface FileUploadProps {
   onUpload: (file: File, category: string) => void;
@@ -14,6 +44,7 @@ export default function FileUpload({ onUpload, onClose }: FileUploadProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [category, setCategory] = useState<string>('');
   const [dragActive, setDragActive] = useState(false);
+  const [isEncrypting, setIsEncrypting] = useState(false);
 
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault();
@@ -41,31 +72,32 @@ export default function FileUpload({ onUpload, onClose }: FileUploadProps) {
     }
   };
 
-  const handleUpload = () => {
+  const handleUpload = async () => {
     if (!selectedFile) {
       toast.error('Please select a file to upload');
       return;
     }
-    
+
     if (!category) {
       toast.error('Please select a document category');
       return;
     }
-    
+
     // File validation
     const allowedTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
     const maxSize = 10 * 1024 * 1024; // 10MB
-    
+
     if (!allowedTypes.includes(selectedFile.type)) {
       toast.error('Unsupported file type. Please upload PDF, JPG, PNG, GIF, or WebP files.');
       return;
     }
-    
+
     if (selectedFile.size > maxSize) {
       toast.error(`File size too large. Maximum allowed size is ${maxSize / (1024 * 1024)}MB`);
       return;
     }
-    
+
+    // Pass the original file to parent - encryption will be handled by PatientDashboard
     onUpload(selectedFile, category);
   };
 
@@ -83,7 +115,10 @@ export default function FileUpload({ onUpload, onClose }: FileUploadProps) {
         <CardHeader>
           <div className="flex justify-between items-center">
             <div>
-              <CardTitle>Upload Medical Record</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <Lock className="h-5 w-5" />
+                Upload Medical Record
+              </CardTitle>
               <CardDescription>
                 Add a new document to your health vault
               </CardDescription>
@@ -157,15 +192,29 @@ export default function FileUpload({ onUpload, onClose }: FileUploadProps) {
             </Select>
           </div>
 
+          <div className="flex items-center p-3 bg-blue-50 rounded-lg">
+            <Lock className="h-4 w-4 mr-2 text-blue-600" />
+            <span className="text-sm text-blue-800">Your file will be encrypted before upload for enhanced privacy</span>
+          </div>
+
           {/* Upload Button */}
           <div className="flex gap-2">
             <Button
               onClick={handleUpload}
-              disabled={!selectedFile || !category}
+              disabled={!selectedFile || !category || isEncrypting}
               className="flex-1"
             >
-              <Upload className="h-4 w-4 mr-2" />
-              Upload Document
+              {isEncrypting ? (
+                <>
+                  <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent"></div>
+                  Encrypting...
+                </>
+              ) : (
+                <>
+                  <Lock className="h-4 w-4 mr-2" />
+                  Encrypt & Upload
+                </>
+              )}
             </Button>
             <Button variant="outline" onClick={onClose}>
               Cancel

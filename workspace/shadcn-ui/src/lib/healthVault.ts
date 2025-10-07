@@ -9,6 +9,7 @@ export interface MedicalRecord {
   category: 'prescription' | 'lab-result' | 'scan' | 'report' | 'other';
   uploadDate: string;
   summary?: string;
+  encryptionMetadata?: any; // For encrypted files
 }
 
 export interface Patient {
@@ -59,7 +60,7 @@ export class HealthVaultService {
       const response = await apiClient.get(`/patients/${id}`);
       console.log('Patient data received:', response.data);
       return response.data;
-    } catch (error: any) {
+    } catch (error: unknown) {
       if (error.response?.status === 404) {
         console.log('Patient not found with ID:', id);
         return null;
@@ -93,7 +94,14 @@ export class HealthVaultService {
   }
 
   // Medical Records Management
-  static async addMedicalRecord(patientId: string, file: File, category: 'prescription' | 'lab-result' | 'scan' | 'report' | 'other', summary?: string): Promise<MedicalRecord> {
+  static async addMedicalRecord(
+    patientId: string,
+    file: File,
+    category: 'prescription' | 'lab-result' | 'scan' | 'report' | 'other',
+    summary?: string,
+    encryptionKey?: string,
+    encryptionMetadata?: any
+  ): Promise<MedicalRecord> {
     try {
       // Create form data for file upload
       const formData = new FormData();
@@ -103,6 +111,23 @@ export class HealthVaultService {
         formData.append('summary', summary);
       }
       formData.append('patientId', patientId);
+
+      // Add encryption metadata if provided
+      if (encryptionKey && encryptionMetadata) {
+        console.log('Adding encryption metadata to form data:', { encryptionKey, encryptionMetadata });
+        formData.append('encryptionKey', encryptionKey);
+        formData.append('encryptionIV', JSON.stringify(encryptionMetadata.iv));
+        formData.append('originalFileName', encryptionMetadata.originalName);
+        formData.append('originalFileType', encryptionMetadata.originalType);
+
+        // Debug: Log what's in FormData
+        console.log('FormData entries:');
+        for (const [key, value] of formData.entries()) {
+          console.log(`  ${key}:`, value);
+        }
+      } else {
+        console.warn('No encryption metadata provided!', { encryptionKey, encryptionMetadata });
+      }
 
       // Make request to upload file and create record
       const response = await apiClient.post('/medical-records', formData, {
@@ -166,7 +191,7 @@ export class HealthVaultService {
       const response = await apiClient.get(`/doctors?email=${encodeURIComponent(email)}`);
       const doctors = response.data;
       return doctors.length > 0 ? doctors[0] : null;
-    } catch (error: any) {
+    } catch (error: unknown) {
       if (error.response?.status === 404) {
         return null;
       }
@@ -187,7 +212,7 @@ export class HealthVaultService {
       const response = await apiClient.get(`/doctors/${id}`);
       console.log('Doctor data received:', response.data);
       return response.data;
-    } catch (error: any) {
+    } catch (error: unknown) {
       if (error.response?.status === 404) {
         console.log('Doctor not found with ID:', id);
         return null;
@@ -240,26 +265,35 @@ export class HealthVaultService {
     localStorage.removeItem('healthvault_auth_token');
   }
 
+  static async deleteMedicalRecord(recordId: string): Promise<void> {
+    try {
+      await apiClient.delete(`/medical-records/${recordId}`);
+    } catch (error) {
+      console.error('Error deleting medical record:', error);
+      throw error;
+    }
+  }
+
   static async getPatientByQRCode(qrCode: string): Promise<Patient | null> {
     try {
       console.log('Fetching patient by QR code:', qrCode);
       const response = await apiClient.get(`/patients?qrCode=${encodeURIComponent(qrCode)}`);
       console.log('Response received:', response);
       console.log('Response data:', response.data);
-      
+
       // The backend returns a single patient object when querying by QR code
       // But we need to make sure it has the required properties
       const patientData = response.data;
-      
+
       // Check if we got valid patient data
       if (patientData && patientData.id) {
         console.log('Valid patient found:', patientData);
         return patientData as Patient;
       }
-      
+
       console.log('No valid patient data found in response');
       return null;
-    } catch (error: any) {
+    } catch (error: unknown) {
       if (error.response?.status === 404) {
         console.log('Patient not found (404 error)');
         return null;

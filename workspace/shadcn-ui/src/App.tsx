@@ -8,6 +8,10 @@ import DoctorDashboard from './pages/DoctorDashboard';
 import NotFound from './pages/NotFound';
 import PatientRegister from './pages/PatientRegister';
 import ProviderRegister from './pages/ProviderRegister';
+import LoginPage from './pages/LoginPage';
+import FeaturesPage from './pages/FeaturesPage';
+import PricingPage from './pages/PricingPage';
+import SecurityPage from './pages/SecurityPage';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 
 const queryClient = new QueryClient();
@@ -27,6 +31,10 @@ const App = () => (
             <Route path="/doctor-dashboard" element={<DoctorDashboard />} />
             <Route path="/patient-register" element={<PatientRegister />} />
             <Route path="/provider-register" element={<ProviderRegister />} />
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/features" element={<FeaturesPage />} />
+            <Route path="/pricing" element={<PricingPage />} />
+            <Route path="/security" element={<SecurityPage />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
