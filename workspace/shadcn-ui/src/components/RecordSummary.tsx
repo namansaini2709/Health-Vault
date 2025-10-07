@@ -11,6 +11,41 @@ interface RecordSummaryProps {
 
 export default function RecordSummary({ records }: RecordSummaryProps) {
   const summary: MedicalSummary = useMemo(() => {
+    // Check if any records have real AI summaries
+    const recordsWithAI = records.filter(r => r.aiSummary && r.aiSummary.text);
+
+    if (recordsWithAI.length > 0) {
+      // Aggregate all AI summaries from records
+      const aggregated: MedicalSummary = {
+        keyFindings: [],
+        conditions: [],
+        medications: [],
+        recommendations: [],
+        riskFactors: [],
+        lastUpdated: new Date().toISOString()
+      };
+
+      recordsWithAI.forEach(record => {
+        if (record.aiSummary) {
+          aggregated.keyFindings.push(...(record.aiSummary.keyFindings || []));
+          aggregated.conditions.push(...(record.aiSummary.conditions || []));
+          aggregated.medications.push(...(record.aiSummary.medications || []));
+          aggregated.recommendations.push(...(record.aiSummary.recommendations || []));
+          aggregated.riskFactors.push(...(record.aiSummary.riskFactors || []));
+        }
+      });
+
+      // Remove duplicates
+      aggregated.keyFindings = [...new Set(aggregated.keyFindings)];
+      aggregated.conditions = [...new Set(aggregated.conditions)];
+      aggregated.medications = [...new Set(aggregated.medications)];
+      aggregated.recommendations = [...new Set(aggregated.recommendations)];
+      aggregated.riskFactors = [...new Set(aggregated.riskFactors)];
+
+      return aggregated;
+    }
+
+    // Fallback to mock summarizer
     return AISummarizer.generatePatientSummary(records);
   }, [records]);
 

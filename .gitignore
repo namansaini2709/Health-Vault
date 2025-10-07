@@ -1,0 +1,11 @@
+backend/uploads
+backend/node_modules
+backend/.env
+backend/test-*.js
+backend/check-api.js
+backend/list-models.js
+backend/clear-database.js
+.claude/
+CLEANUP_SCRIPT.js
+workspace/shadcn-ui/clear-browser-storage.html
+workspace/shadcn-ui/node_modules

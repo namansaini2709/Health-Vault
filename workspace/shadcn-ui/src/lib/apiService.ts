@@ -39,4 +39,38 @@ apiClient.interceptors.response.use(
   }
 );
 
+// AI Summarization API calls
+export const summarizeRecord = async (recordId: string, force = false) => {
+  try {
+    const url = force
+      ? `/summarize-record/${recordId}?force=true`
+      : `/summarize-record/${recordId}`;
+    const response = await apiClient.post(url);
+    return response.data;
+  } catch (error) {
+    console.error('Error summarizing record:', error);
+    throw error;
+  }
+};
+
+export const summarizePatientRecords = async (patientId: string) => {
+  try {
+    const response = await apiClient.post(`/summarize-patient/${patientId}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error summarizing patient records:', error);
+    throw error;
+  }
+};
+
+export const deleteRecord = async (recordId: string) => {
+  try {
+    const response = await apiClient.delete(`/medical-records/${recordId}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error deleting record:', error);
+    throw error;
+  }
+};
+
 export default apiClient;
