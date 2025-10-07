@@ -13,6 +13,7 @@ import FeaturesPage from './pages/FeaturesPage';
 import PricingPage from './pages/PricingPage';
 import SecurityPage from './pages/SecurityPage';
 import { GoogleOAuthProvider } from '@react-oauth/google';
+import { ThemeProvider } from './contexts/ThemeContext';
 
 const queryClient = new QueryClient();
 
@@ -22,23 +23,25 @@ const googleClientId = "239667058295-qop1e2t62cfssk54ohrcgqe7lviuv0f3.apps.googl
 const App = () => (
   <GoogleOAuthProvider clientId={googleClientId}>
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/patient-dashboard" element={<PatientDashboard />} />
-            <Route path="/doctor-dashboard" element={<DoctorDashboard />} />
-            <Route path="/patient-register" element={<PatientRegister />} />
-            <Route path="/provider-register" element={<ProviderRegister />} />
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/features" element={<FeaturesPage />} />
-            <Route path="/pricing" element={<PricingPage />} />
-            <Route path="/security" element={<SecurityPage />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </TooltipProvider>
+      <ThemeProvider>
+        <TooltipProvider>
+          <Toaster />
+          <BrowserRouter>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/patient-dashboard" element={<PatientDashboard />} />
+              <Route path="/doctor-dashboard" element={<DoctorDashboard />} />
+              <Route path="/patient-register" element={<PatientRegister />} />
+              <Route path="/provider-register" element={<ProviderRegister />} />
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/features" element={<FeaturesPage />} />
+              <Route path="/pricing" element={<PricingPage />} />
+              <Route path="/security" element={<SecurityPage />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </TooltipProvider>
+      </ThemeProvider>
     </QueryClientProvider>
   </GoogleOAuthProvider>
 );

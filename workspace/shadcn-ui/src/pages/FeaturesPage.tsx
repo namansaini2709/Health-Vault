@@ -3,14 +3,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Heart, QrCode, Shield, Smartphone, UserCheck, Stethoscope, ArrowRight, Lock, Zap, FileText, Users, BarChart, Bell, Cloud, Activity, Brain, Calendar, CheckCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { ThemeToggle } from '@/components/ui/theme-toggle';
 
 export default function FeaturesPage() {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-gray-800 dark:via-gray-900 dark:to-gray-900 dark:text-white">
       {/* Navigation */}
-      <nav className="bg-white/80 backdrop-blur-md border-b border-gray-200 sticky top-0 z-40">
+      <nav className="bg-white/80 backdrop-blur-md border-b border-gray-200 sticky top-0 z-40 dark:bg-gray-900/90 dark:border-gray-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-2 cursor-pointer" onClick={() => navigate('/')}>
@@ -22,6 +23,7 @@ export default function FeaturesPage() {
               </span>
             </div>
             <div className="flex items-center space-x-4">
+              <ThemeToggle />
               <Button variant="outline" size="sm" onClick={() => navigate('/')}>Back to Home</Button>
               <Button size="sm" onClick={() => navigate('/patient-register')}>Get Started</Button>
             </div>
@@ -36,13 +38,13 @@ export default function FeaturesPage() {
             <Badge className="mb-4 bg-blue-100 text-blue-800 hover:bg-blue-200">
               Comprehensive Features
             </Badge>
-            <h1 className="text-4xl lg:text-6xl font-bold text-gray-900 mb-6">
+            <h1 className="text-4xl lg:text-6xl font-bold text-gray-900 mb-6 dark:text-white">
               Everything You Need for
-              <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent block">
+              <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent block dark:from-blue-400 dark:to-indigo-400">
                 Modern Healthcare
               </span>
             </h1>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto dark:text-gray-300">
               Powerful features designed to revolutionize how you manage and share medical records
             </p>
           </div>
@@ -50,9 +52,9 @@ export default function FeaturesPage() {
       </section>
 
       {/* Core Features */}
-      <section className="py-12 bg-white">
+      <section className="py-12 bg-white dark:bg-gray-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl font-bold text-gray-900 mb-12 text-center">Core Features</h2>
+          <h2 className="text-3xl font-bold text-gray-900 mb-12 text-center dark:text-white">Core Features</h2>
 
           <div className="grid md:grid-cols-2 gap-8">
             {/* QR Code Access */}
@@ -69,7 +71,7 @@ export default function FeaturesPage() {
                 </div>
               </CardHeader>
               <CardContent className="space-y-4">
-                <p className="text-gray-600">
+                <p className="text-gray-600 dark:text-gray-300">
                   Generate a unique QR code that gives healthcare providers instant access to your complete medical history. No apps, no delays - just scan and view.
                 </p>
                 <ul className="space-y-2">
@@ -103,7 +105,7 @@ export default function FeaturesPage() {
                 </div>
               </CardHeader>
               <CardContent className="space-y-4">
-                <p className="text-gray-600">
+                <p className="text-gray-600 dark:text-gray-300">
                   Your medical records are encrypted with AES-256 encryption before they leave your device. Only you hold the keys.
                 </p>
                 <ul className="space-y-2">
@@ -137,7 +139,7 @@ export default function FeaturesPage() {
                 </div>
               </CardHeader>
               <CardContent className="space-y-4">
-                <p className="text-gray-600">
+                <p className="text-gray-600 dark:text-gray-300">
                   Advanced AI analyzes your medical records to provide personalized health insights and recommendations.
                 </p>
                 <ul className="space-y-2">
@@ -171,7 +173,7 @@ export default function FeaturesPage() {
                 </div>
               </CardHeader>
               <CardContent className="space-y-4">
-                <p className="text-gray-600">
+                <p className="text-gray-600 dark:text-gray-300">
                   Access your medical records from any device, anywhere in the world, 24/7. Your health data travels with you.
                 </p>
                 <ul className="space-y-2">
@@ -197,7 +199,7 @@ export default function FeaturesPage() {
       {/* Advanced Features */}
       <section className="py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl font-bold text-gray-900 mb-12 text-center">Advanced Capabilities</h2>
+          <h2 className="text-3xl font-bold text-gray-900 mb-12 text-center dark:text-white">Advanced Capabilities</h2>
 
           <div className="grid md:grid-cols-3 gap-6">
             <Card>
@@ -206,7 +208,7 @@ export default function FeaturesPage() {
                 <CardTitle>Patient Control</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-gray-600">Full control over who can access your records and for how long. Revoke access anytime.</p>
+                <p className="text-gray-600 dark:text-gray-300">Full control over who can access your records and for how long. Revoke access anytime.</p>
               </CardContent>
             </Card>
 
@@ -216,7 +218,7 @@ export default function FeaturesPage() {
                 <CardTitle>Provider Dashboard</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-gray-600">Healthcare providers get dedicated dashboards with patient analytics and insights.</p>
+                <p className="text-gray-600 dark:text-gray-300">Healthcare providers get dedicated dashboards with patient analytics and insights.</p>
               </CardContent>
             </Card>
 
@@ -226,7 +228,7 @@ export default function FeaturesPage() {
                 <CardTitle>Document Management</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-gray-600">Upload, organize, and categorize all types of medical documents in one place.</p>
+                <p className="text-gray-600 dark:text-gray-300">Upload, organize, and categorize all types of medical documents in one place.</p>
               </CardContent>
             </Card>
 
@@ -236,7 +238,7 @@ export default function FeaturesPage() {
                 <CardTitle>Health Analytics</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-gray-600">Visualize trends in your health data with interactive charts and graphs.</p>
+                <p className="text-gray-600 dark:text-gray-300">Visualize trends in your health data with interactive charts and graphs.</p>
               </CardContent>
             </Card>
 
@@ -246,7 +248,7 @@ export default function FeaturesPage() {
                 <CardTitle>Smart Reminders</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-gray-600">Get notifications for medication refills, appointments, and health checkups.</p>
+                <p className="text-gray-600 dark:text-gray-300">Get notifications for medication refills, appointments, and health checkups.</p>
               </CardContent>
             </Card>
 
@@ -256,7 +258,7 @@ export default function FeaturesPage() {
                 <CardTitle>Family Sharing</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-gray-600">Manage medical records for your entire family from a single account.</p>
+                <p className="text-gray-600 dark:text-gray-300">Manage medical records for your entire family from a single account.</p>
               </CardContent>
             </Card>
           </div>
@@ -273,11 +275,11 @@ export default function FeaturesPage() {
             Join thousands of users who trust HealthVault with their medical records
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button size="lg" className="bg-white text-blue-600 hover:bg-gray-100" onClick={() => navigate('/patient-register')}>
+            <Button size="lg" className="bg-white text-blue-600 hover:bg-gray-100 dark:bg-gray-800 dark:text-blue-300 dark:hover:bg-gray-700" onClick={() => navigate('/patient-register')}>
               Get Started Free
               <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
-            <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10" onClick={() => navigate('/pricing')}>
+            <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10 dark:border-gray-600 dark:text-white dark:hover:bg-gray-800" onClick={() => navigate('/pricing')}>
               View Pricing
             </Button>
           </div>

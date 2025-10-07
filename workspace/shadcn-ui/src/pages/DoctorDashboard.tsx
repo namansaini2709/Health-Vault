@@ -16,6 +16,7 @@ import RecordSummary from '@/components/RecordSummary';
 import DashboardStats from '@/components/DashboardStats';
 import AIInsights from '@/components/AIInsights';
 import { summarizePatientRecords } from '@/lib/apiService';
+import { ThemeToggle } from '@/components/ui/theme-toggle';
 
 export default function DoctorDashboard() {
   const navigate = useNavigate();
@@ -159,16 +160,17 @@ export default function DoctorDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 dark:text-white">
       {/* Header */}
-      <div className="bg-white border-b">
+      <div className="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
         <div className="container mx-auto px-4 py-4">
           <div className="flex justify-between items-center">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">HealthVault Provider</h1>
-              <p className="text-gray-600">Dr. {doctor.name} - {doctor.specialty}</p>
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">HealthVault Provider</h1>
+              <p className="text-gray-600 dark:text-gray-300">Dr. {doctor.name} - {doctor.specialty}</p>
             </div>
             <div className="flex gap-2">
+              <ThemeToggle />
               <Button variant="outline" onClick={() => setShowScanner(true)}>
                 <QrCode className="h-4 w-4 mr-2" />
                 Scan QR Code
@@ -209,20 +211,20 @@ export default function DoctorDashboard() {
                   <CardContent>
                     <div className="grid grid-cols-2 gap-4 text-sm">
                       <div>
-                        <p className="font-medium text-gray-500">Email</p>
+                        <p className="font-medium text-gray-500 dark:text-gray-400">Email</p>
                         <p>{selectedPatient.email}</p>
                       </div>
                       <div>
-                        <p className="font-medium text-gray-500">Phone</p>
-                        <p>{selectedPatient.phone}</p>
+                        <p className="font-medium text-gray-500 dark:text-gray-400">Phone</p>
+                        <p className="dark:text-gray-300">{selectedPatient.phone}</p>
                       </div>
                       <div>
-                        <p className="font-medium text-gray-500">Emergency Contact</p>
-                        <p>{selectedPatient.emergencyContact}</p>
+                        <p className="font-medium text-gray-500 dark:text-gray-400">Emergency Contact</p>
+                        <p className="dark:text-gray-300">{selectedPatient.emergencyContact}</p>
                       </div>
                       <div>
-                        <p className="font-medium text-gray-500">Total Records</p>
-                        <p>{selectedPatient.records.length}</p>
+                        <p className="font-medium text-gray-500 dark:text-gray-400">Total Records</p>
+                        <p className="dark:text-gray-300">{selectedPatient.records.length}</p>
                       </div>
                     </div>
                   </CardContent>
@@ -239,23 +241,23 @@ export default function DoctorDashboard() {
                     {selectedPatient.records.length === 0 ? (
                       <Card>
                         <CardContent className="py-16 text-center">
-                          <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                          <h3 className="text-lg font-medium text-gray-900 mb-2">No medical records</h3>
-                          <p className="text-gray-600">This patient hasn't uploaded any medical records yet.</p>
+                          <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4 dark:text-gray-500" />
+                          <h3 className="text-lg font-medium text-gray-900 mb-2 dark:text-white">No medical records</h3>
+                          <p className="text-gray-600 dark:text-gray-300">This patient hasn't uploaded any medical records yet.</p>
                         </CardContent>
                       </Card>
                     ) : (
                       <div className="space-y-4">
                         {selectedPatient.records.map((record: MedicalRecord) => (
-                          <Card key={record.id} className="hover:bg-gray-50">
+                          <Card key={record.id} className="hover:bg-gray-50 dark:hover:bg-gray-800">
                             <CardContent className="p-6">
                               <div className="flex justify-between items-start mb-3">
                                 <div className="flex-1">
                                   <div className="flex items-center gap-2 mb-1">
-                                    <h3 className="font-medium text-gray-900">{record.fileName}</h3>
+                                    <h3 className="font-medium text-gray-900 dark:text-white">{record.fileName}</h3>
                                     <Lock className="h-4 w-4 text-green-600" title="Patient-encrypted file" />
                                   </div>
-                                  <div className="flex items-center gap-2 text-sm text-gray-600">
+                                  <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
                                     <Calendar className="h-4 w-4" />
                                     {formatDate(record.uploadDate)}
                                   </div>
@@ -330,7 +332,7 @@ export default function DoctorDashboard() {
                             {filteredPatients.map((patient) => (
                               <div
                                 key={patient.id}
-                                className="flex justify-between items-center p-3 border rounded-lg hover:bg-gray-50 cursor-pointer"
+                                className="flex justify-between items-center p-3 border rounded-lg hover:bg-gray-50 cursor-pointer dark:hover:bg-gray-800 dark:border-gray-700"
                                 onClick={() => handlePatientSearch(patient.id)}
                               >
                                 <div>

@@ -13,6 +13,7 @@ import { HealthVaultService } from "@/lib/healthVault";
 import { toast } from "sonner";
 import PasswordStrength from "@/components/PasswordStrength";
 import axios from "axios";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 
 const ProviderRegister = () => {
   const navigate = useNavigate();
@@ -92,7 +93,10 @@ const ProviderRegister = () => {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100">
+    <div className="flex items-center justify-center min-h-screen bg-gray-100 dark:bg-gray-900 dark:text-white">
+      <div className="absolute top-4 right-4">
+        <ThemeToggle />
+      </div>
       <Card className="w-full max-w-lg">
         <CardHeader>
           <CardTitle>Provider Registration</CardTitle>

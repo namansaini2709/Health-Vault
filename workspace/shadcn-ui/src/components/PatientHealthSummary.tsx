@@ -63,9 +63,9 @@ export default function PatientHealthSummary({ records }: PatientHealthSummaryPr
     return (
       <Card>
         <CardContent className="py-16 text-center">
-          <Brain className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No health data yet</h3>
-          <p className="text-gray-600">Upload your medical records to see your personalized health summary</p>
+          <Brain className="h-12 w-12 text-gray-400 mx-auto mb-4 dark:text-gray-500" />
+          <h3 className="text-lg font-medium text-gray-900 mb-2 dark:text-white">No health data yet</h3>
+          <p className="text-gray-600 dark:text-gray-300">Upload your medical records to see your personalized health summary</p>
         </CardContent>
       </Card>
     );
@@ -127,7 +127,7 @@ export default function PatientHealthSummary({ records }: PatientHealthSummaryPr
               {summary.medications.map((medication, index) => (
                 <div key={index} className="flex items-center gap-3 p-3 bg-green-50 rounded-lg">
                   <div className="w-2 h-2 bg-green-500 rounded-full flex-shrink-0"></div>
-                  <span className="text-sm font-medium text-gray-800">{medication}</span>
+                  <span className="text-sm font-medium text-gray-800 dark:text-gray-200">{medication}</span>
                 </div>
               ))}
             </div>
@@ -156,7 +156,7 @@ export default function PatientHealthSummary({ records }: PatientHealthSummaryPr
                 </Badge>
               ))}
             </div>
-            <p className="text-xs text-gray-500 mt-3">
+            <p className="text-xs text-gray-500 mt-3 dark:text-gray-400">
               💡 Keep track of your conditions and discuss any changes with your healthcare provider.
             </p>
           </CardContent>
@@ -178,7 +178,7 @@ export default function PatientHealthSummary({ records }: PatientHealthSummaryPr
               {summary.keyFindings.slice(0, 5).map((finding, index) => (
                 <div key={index} className="flex items-start gap-3 p-3 bg-blue-50 rounded-lg">
                   <CheckCircle className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" />
-                  <p className="text-sm text-gray-700">{finding}</p>
+                  <p className="text-sm text-gray-700 dark:text-gray-300">{finding}</p>
                 </div>
               ))}
             </div>
@@ -203,7 +203,7 @@ export default function PatientHealthSummary({ records }: PatientHealthSummaryPr
               {summary.riskFactors.map((risk, index) => (
                 <div key={index} className="flex items-start gap-3 p-3 bg-white rounded-lg">
                   <AlertCircle className="h-5 w-5 text-yellow-600 mt-0.5 flex-shrink-0" />
-                  <p className="text-sm text-gray-700">{risk}</p>
+                  <p className="text-sm text-gray-700 dark:text-gray-300">{risk}</p>
                 </div>
               ))}
             </div>
@@ -230,7 +230,7 @@ export default function PatientHealthSummary({ records }: PatientHealthSummaryPr
                   <div className="flex items-center justify-center w-6 h-6 bg-purple-600 text-white rounded-full flex-shrink-0 text-sm font-bold">
                     {index + 1}
                   </div>
-                  <p className="text-sm text-gray-700">{recommendation}</p>
+                  <p className="text-sm text-gray-700 dark:text-gray-300">{recommendation}</p>
                 </div>
               ))}
             </div>
@@ -279,7 +279,7 @@ export default function PatientHealthSummary({ records }: PatientHealthSummaryPr
             <AlertCircle className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" />
             <div>
               <p className="text-sm font-medium text-blue-900 mb-1">📋 Please Note</p>
-              <p className="text-xs text-blue-700">
+              <p className="text-xs text-blue-700 dark:text-blue-300">
                 This summary is created by AI to help you understand your health records. It's for information only
                 and should not replace advice from your doctor. Always talk to your healthcare provider about your health
                 concerns and before making any medical decisions.

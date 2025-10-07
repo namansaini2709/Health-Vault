@@ -11,6 +11,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import axios from 'axios';
+import { ThemeToggle } from '@/components/ui/theme-toggle';
 
 export default function Index() {
   const navigate = useNavigate();
@@ -78,9 +79,9 @@ export default function Index() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-gray-800 dark:via-gray-900 dark:to-gray-900">
       {/* Navigation */}
-      <nav className="bg-white/80 backdrop-blur-md border-b border-gray-200 sticky top-0 z-40">
+      <nav className="bg-white/80 backdrop-blur-md border-b border-gray-200 sticky top-0 z-40 dark:bg-gray-900/90 dark:border-gray-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-2">
@@ -91,11 +92,14 @@ export default function Index() {
                 HealthVault
               </span>
             </div>
-            <div className="hidden md:flex items-center space-x-8">
-              <a onClick={() => navigate('/features')} className="text-gray-600 hover:text-gray-900 transition-colors cursor-pointer">Features</a>
-              <a onClick={() => navigate('/pricing')} className="text-gray-600 hover:text-gray-900 transition-colors cursor-pointer">Pricing</a>
-              <a onClick={() => navigate('/security')} className="text-gray-600 hover:text-gray-900 transition-colors cursor-pointer">Security</a>
-              <Button variant="outline" size="sm" onClick={() => navigate('/login')}>Login</Button>
+            <div className="hidden md:flex items-center space-x-6">
+              <a onClick={() => navigate('/features')} className="text-gray-600 hover:text-gray-900 transition-colors cursor-pointer dark:text-gray-300 dark:hover:text-white font-medium">Features</a>
+              <a onClick={() => navigate('/pricing')} className="text-gray-600 hover:text-gray-900 transition-colors cursor-pointer dark:text-gray-300 dark:hover:text-white font-medium">Pricing</a>
+              <a onClick={() => navigate('/security')} className="text-gray-600 hover:text-gray-900 transition-colors cursor-pointer dark:text-gray-300 dark:hover:text-white font-medium">Security</a>
+              <Button variant="outline" size="sm" onClick={() => navigate('/login')} className="dark:border-gray-600 dark:text-white dark:hover:bg-gray-800 dark:hover:text-white font-medium">Login</Button>
+              <div className="ml-4">
+                <ThemeToggle />
+              </div>
             </div>
           </div>
         </div>
@@ -107,17 +111,17 @@ export default function Index() {
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="space-y-8">
               <div className="space-y-4">
-                <div className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+                <div className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-200">
                   <Zap className="w-4 h-4 mr-2" />
                   Revolutionary Healthcare Platform
                 </div>
-                <h1 className="text-4xl lg:text-6xl font-bold text-gray-900 leading-tight">
+                <h1 className="text-4xl lg:text-6xl font-bold text-gray-900 leading-tight dark:text-white">
                   One Patient,
-                  <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent block">
+                  <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent block dark:from-blue-400 dark:to-indigo-400">
                     One Record
                   </span>
                 </h1>
-                <p className="text-xl text-gray-600 leading-relaxed">
+                <p className="text-xl text-gray-600 leading-relaxed dark:text-gray-300">
                   Your complete medical history, accessible anywhere with just a QR code. 
                   Secure, portable, and AI-powered health records that put you in control.
                 </p>
@@ -156,63 +160,63 @@ export default function Index() {
               <div className="flex items-center space-x-8 pt-4">
                 <div className="flex items-center space-x-2">
                   <CheckCircle className="h-5 w-5 text-green-500" />
-                  <span className="text-sm text-gray-600">HIPAA Compliant</span>
+                  <span className="text-sm text-gray-600 dark:text-gray-300">HIPAA Compliant</span>
                 </div>
                 <div className="flex items-center space-x-2">
                   <CheckCircle className="h-5 w-5 text-green-500" />
-                  <span className="text-sm text-gray-600">End-to-End Encrypted</span>
+                  <span className="text-sm text-gray-600 dark:text-gray-300">End-to-End Encrypted</span>
                 </div>
                 <div className="flex items-center space-x-2">
                   <CheckCircle className="h-5 w-5 text-green-500" />
-                  <span className="text-sm text-gray-600">AI-Powered</span>
+                  <span className="text-sm text-gray-600 dark:text-gray-300">AI-Powered</span>
                 </div>
               </div>
             </div>
 
             <div className="relative">
-              <div className="bg-white rounded-2xl shadow-2xl p-8 transform rotate-3 hover:rotate-0 transition-transform duration-300">
+              <div className="bg-white rounded-2xl shadow-2xl p-8 transform rotate-3 hover:rotate-0 transition-transform duration-300 dark:bg-gray-800 dark:text-gray-100">
                 <div className="space-y-6">
                   <div className="flex items-center justify-between">
-                    <h3 className="text-lg font-semibold">Health Dashboard</h3>
+                    <h3 className="text-lg font-semibold dark:text-white">Health Dashboard</h3>
                     <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-lg flex items-center justify-center">
                       <QrCode className="h-6 w-6 text-white" />
                     </div>
                   </div>
                   
                   <div className="space-y-4">
-                    <div className="bg-gray-50 rounded-lg p-4">
+                    <div className="bg-gray-50 rounded-lg p-4 dark:bg-gray-700 dark:text-gray-100">
                       <div className="flex items-center space-x-3">
                         <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                        <span className="text-sm font-medium">Upload Medical Records</span>
+                        <span className="text-sm font-medium dark:text-white">Upload Medical Records</span>
                       </div>
-                      <p className="text-xs text-gray-500 mt-1">Securely store your health documents</p>
+                      <p className="text-xs text-gray-500 mt-1 dark:text-gray-300">Securely store your health documents</p>
                     </div>
                     
-                    <div className="bg-gray-50 rounded-lg p-4">
+                    <div className="bg-gray-50 rounded-lg p-4 dark:bg-gray-700 dark:text-gray-100">
                       <div className="flex items-center space-x-3">
                         <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-                        <span className="text-sm font-medium">Generate QR Code</span>
+                        <span className="text-sm font-medium dark:text-white">Generate QR Code</span>
                       </div>
-                      <p className="text-xs text-gray-500 mt-1">Share with healthcare providers instantly</p>
+                      <p className="text-xs text-gray-500 mt-1 dark:text-gray-300">Share with healthcare providers instantly</p>
                     </div>
                     
-                    <div className="bg-gray-50 rounded-lg p-4">
+                    <div className="bg-gray-50 rounded-lg p-4 dark:bg-gray-700 dark:text-gray-100">
                       <div className="flex items-center space-x-3">
                         <div className="w-3 h-3 bg-purple-500 rounded-full"></div>
-                        <span className="text-sm font-medium">AI Health Insights</span>
+                        <span className="text-sm font-medium dark:text-white">AI Health Insights</span>
                       </div>
-                      <p className="text-xs text-gray-500 mt-1">Get personalized health recommendations</p>
+                      <p className="text-xs text-gray-500 mt-1 dark:text-gray-300">Get personalized health recommendations</p>
                     </div>
                   </div>
                 </div>
               </div>
               
               {/* Floating elements */}
-              <div className="absolute -top-4 -right-4 bg-white rounded-full p-3 shadow-lg">
-                <Shield className="h-6 w-6 text-green-500" />
+              <div className="absolute -top-4 -right-4 bg-white rounded-full p-3 shadow-lg dark:bg-gray-700">
+                <Shield className="h-6 w-6 text-green-500 dark:text-green-400" />
               </div>
-              <div className="absolute -bottom-4 -left-4 bg-white rounded-full p-3 shadow-lg">
-                <Smartphone className="h-6 w-6 text-blue-500" />
+              <div className="absolute -bottom-4 -left-4 bg-white rounded-full p-3 shadow-lg dark:bg-gray-700">
+                <Smartphone className="h-6 w-6 text-blue-500 dark:text-blue-400" />
               </div>
             </div>
           </div>
@@ -220,13 +224,13 @@ export default function Index() {
       </section>
 
       {/* Features Section */}
-      <section id="features" className="py-20 bg-white">
+      <section id="features" className="py-20 bg-white dark:bg-gray-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
+            <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-4 dark:text-white">
               Everything You Need for Digital Health Records
             </h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto dark:text-gray-300">
               Secure, accessible, and intelligent healthcare management at your fingertips
             </p>
           </div>
@@ -314,13 +318,13 @@ export default function Index() {
       </section>
 
       {/* Pricing Section */}
-      <section id="pricing" className="py-20 bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
+      <section id="pricing" className="py-20 bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-gray-800 dark:via-gray-900 dark:to-gray-900">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
+            <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-4 dark:text-white">
               Simple, Transparent Pricing
             </h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto dark:text-gray-300">
               Choose the plan that's right for you
             </p>
           </div>
@@ -333,10 +337,10 @@ export default function Index() {
                 <div className="mt-4">
                   <span className="text-4xl font-bold">Free</span>
                 </div>
-                <p className="text-sm text-gray-500 mt-2">Free forever</p>
+                <p className="text-sm text-gray-500 mt-2 dark:text-gray-400">Free forever</p>
               </CardHeader>
               <CardContent className="space-y-4">
-                <p className="text-gray-600 text-sm">Perfect for personal health record management</p>
+                <p className="text-gray-600 text-sm dark:text-gray-300">Perfect for personal health record management</p>
                 <ul className="space-y-3">
                   <li className="flex items-start gap-2">
                     <Check className="h-5 w-5 text-green-500 mt-0.5" />
@@ -378,11 +382,11 @@ export default function Index() {
                 <CardTitle className="text-2xl">Premium Plan</CardTitle>
                 <div className="mt-4">
                   <span className="text-4xl font-bold">$9.99</span>
-                  <span className="text-gray-600"> per month</span>
+                  <span className="text-gray-600 dark:text-gray-300"> per month</span>
                 </div>
               </CardHeader>
               <CardContent className="space-y-4">
-                <p className="text-gray-600 text-sm">Advanced AI features with appointment booking</p>
+                <p className="text-gray-600 text-sm dark:text-gray-300">Advanced AI features with appointment booking</p>
                 <ul className="space-y-3">
                   <li className="flex items-start gap-2">
                     <Check className="h-5 w-5 text-green-500 mt-0.5" />
@@ -421,7 +425,7 @@ export default function Index() {
       </section>
 
       {/* Footer */}
-      <footer className="bg-gray-900 text-white py-12">
+      <footer className="bg-gray-900 text-white py-12 dark:bg-gray-950">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid md:grid-cols-4 gap-8">
             <div className="space-y-4">

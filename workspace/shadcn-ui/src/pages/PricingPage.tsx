@@ -3,14 +3,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Heart, Check, ArrowRight, Zap, Crown } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { ThemeToggle } from '@/components/ui/theme-toggle';
 
 export default function PricingPage() {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-gray-800 dark:via-gray-900 dark:to-gray-900 dark:text-white">
       {/* Navigation */}
-      <nav className="bg-white/80 backdrop-blur-md border-b border-gray-200 sticky top-0 z-40">
+      <nav className="bg-white/80 backdrop-blur-md border-b border-gray-200 sticky top-0 z-40 dark:bg-gray-900/90 dark:border-gray-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-2 cursor-pointer" onClick={() => navigate('/')}>
@@ -22,6 +23,7 @@ export default function PricingPage() {
               </span>
             </div>
             <div className="flex items-center space-x-4">
+              <ThemeToggle />
               <Button variant="outline" size="sm" onClick={() => navigate('/')}>Back to Home</Button>
               <Button size="sm" onClick={() => navigate('/patient-register')}>Get Started</Button>
             </div>
@@ -36,13 +38,13 @@ export default function PricingPage() {
             <Badge className="mb-4 bg-blue-100 text-blue-800 hover:bg-blue-200">
               Transparent Pricing
             </Badge>
-            <h1 className="text-4xl lg:text-6xl font-bold text-gray-900 mb-6">
+            <h1 className="text-4xl lg:text-6xl font-bold text-gray-900 mb-6 dark:text-white">
               Choose the Perfect Plan
-              <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent block">
+              <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent block dark:from-blue-400 dark:to-indigo-400">
                 for Your Needs
               </span>
             </h1>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto dark:text-gray-300">
               Flexible pricing options for individuals, families, and healthcare organizations
             </p>
           </div>
@@ -56,15 +58,15 @@ export default function PricingPage() {
             {/* Basic Plan */}
             <Card className="border-2 hover:shadow-2xl transition-all duration-300">
               <CardHeader className="text-center pb-8">
-                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Zap className="h-8 w-8 text-gray-600" />
+                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4 dark:bg-gray-700">
+                  <Zap className="h-8 w-8 text-gray-600 dark:text-gray-300" />
                 </div>
                 <CardTitle className="text-3xl mb-2">Basic Plan</CardTitle>
                 <div className="mt-4">
                   <span className="text-5xl font-bold">Free</span>
                 </div>
                 <CardDescription className="mt-2">Perfect for personal health record management</CardDescription>
-                <p className="text-sm text-gray-500 mt-1">Free forever</p>
+                <p className="text-sm text-gray-500 mt-1 dark:text-gray-400">Free forever</p>
               </CardHeader>
               <CardContent className="space-y-6">
                 <ul className="space-y-4">
@@ -113,7 +115,7 @@ export default function PricingPage() {
                 <CardTitle className="text-3xl mb-2">Premium Plan</CardTitle>
                 <div className="mt-4">
                   <span className="text-5xl font-bold">$9.99</span>
-                  <span className="text-gray-600 text-lg"> per month</span>
+                  <span className="text-gray-600 text-lg dark:text-gray-300"> per month</span>
                 </div>
                 <CardDescription className="mt-2">Advanced AI features with appointment booking</CardDescription>
               </CardHeader>
@@ -160,9 +162,9 @@ export default function PricingPage() {
       </section>
 
       {/* FAQ Section */}
-      <section className="py-20 bg-white">
+      <section className="py-20 bg-white dark:bg-gray-800">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl font-bold text-gray-900 mb-12 text-center">Frequently Asked Questions</h2>
+          <h2 className="text-3xl font-bold text-gray-900 mb-12 text-center dark:text-white">Frequently Asked Questions</h2>
 
           <div className="space-y-6">
             <Card>
@@ -170,7 +172,7 @@ export default function PricingPage() {
                 <CardTitle className="text-lg">Can I upgrade or downgrade my plan?</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-gray-600">Yes! You can upgrade or downgrade your plan at any time. Changes take effect immediately, and we'll prorate any billing differences.</p>
+                <p className="text-gray-600 dark:text-gray-300">Yes! You can upgrade or downgrade your plan at any time. Changes take effect immediately, and we'll prorate any billing differences.</p>
               </CardContent>
             </Card>
 
@@ -179,7 +181,7 @@ export default function PricingPage() {
                 <CardTitle className="text-lg">Is there a free trial for Pro?</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-gray-600">Yes, we offer a 14-day free trial for the Pro plan. No credit card required to start your trial.</p>
+                <p className="text-gray-600 dark:text-gray-300">Yes, we offer a 14-day free trial for the Pro plan. No credit card required to start your trial.</p>
               </CardContent>
             </Card>
 
@@ -188,7 +190,7 @@ export default function PricingPage() {
                 <CardTitle className="text-lg">What payment methods do you accept?</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-gray-600">We accept all major credit cards (Visa, Mastercard, American Express) and PayPal. Enterprise customers can pay via invoice.</p>
+                <p className="text-gray-600 dark:text-gray-300">We accept all major credit cards (Visa, Mastercard, American Express) and PayPal. Enterprise customers can pay via invoice.</p>
               </CardContent>
             </Card>
 
@@ -197,7 +199,7 @@ export default function PricingPage() {
                 <CardTitle className="text-lg">Can I cancel anytime?</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-gray-600">Absolutely! There are no long-term contracts. You can cancel your subscription at any time, and you'll retain access until the end of your billing period.</p>
+                <p className="text-gray-600 dark:text-gray-300">Absolutely! There are no long-term contracts. You can cancel your subscription at any time, and you'll retain access until the end of your billing period.</p>
               </CardContent>
             </Card>
           </div>
@@ -213,7 +215,7 @@ export default function PricingPage() {
           <p className="text-xl text-blue-100 mb-8">
             Start with our free plan and upgrade when you're ready
           </p>
-          <Button size="lg" className="bg-white text-blue-600 hover:bg-gray-100" onClick={() => navigate('/patient-register')}>
+          <Button size="lg" className="bg-white text-blue-600 hover:bg-gray-100 dark:bg-gray-800 dark:text-blue-300 dark:hover:bg-gray-700" onClick={() => navigate('/patient-register')}>
             Start Free Today
             <ArrowRight className="ml-2 h-4 w-4" />
           </Button>

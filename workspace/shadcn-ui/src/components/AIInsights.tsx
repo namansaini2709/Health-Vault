@@ -47,7 +47,7 @@ const AIInsights = ({ allPatients }: { allPatients: Patient[] }) => {
             </div>
           ))
         ) : (
-          <p className="text-gray-600 text-center py-4">No specific insights to show at the moment.</p>
+          <p className="text-gray-600 text-center py-4 dark:text-gray-300">No specific insights to show at the moment.</p>
         )}
       </CardContent>
     </Card>

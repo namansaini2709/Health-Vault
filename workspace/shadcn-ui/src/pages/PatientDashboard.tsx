@@ -15,6 +15,7 @@ import QRGenerator from '@/components/QRGenerator';
 import PatientHealthSummary from '@/components/PatientHealthSummary';
 import EncryptedRecordSummary from '@/components/EncryptedRecordSummary';
 import { createEncryptedFile, generateEncryptionKey, keyToHexString, storeKeyInSession } from '@/lib/encryptionUtils';
+import { ThemeToggle } from '@/components/ui/theme-toggle';
 
 type RecordCategory = 'prescription' | 'lab-result' | 'scan' | 'report' | 'other';
 
@@ -181,16 +182,16 @@ export default function PatientDashboard() {
 
   if (!patient) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center dark:bg-gray-900">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 dark:border-blue-400"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 dark:text-white">
       {/* Mobile-First Header */}
-      <div className="bg-white border-b sticky top-0 z-30">
+      <div className="bg-white border-b sticky top-0 z-30 dark:bg-gray-800 dark:border-gray-700">
         <div className="px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div className="flex items-center space-x-3">
@@ -198,11 +199,12 @@ export default function PatientDashboard() {
                 <Heart className="h-6 w-6 text-white" />
               </div>
               <div>
-                <h1 className="text-xl sm:text-2xl font-bold text-gray-900">HealthVault</h1>
-                <p className="text-sm text-gray-600 hidden sm:block">Welcome back, {patient.name}</p>
+                <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">HealthVault</h1>
+                <p className="text-sm text-gray-600 hidden sm:block dark:text-gray-300">Welcome back, {patient.name}</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
+              <ThemeToggle />
               <Button variant="outline" size="sm" onClick={() => setShowQR(true)} className="flex-1 sm:flex-none">
                 <QrCode className="h-4 w-4 mr-2" />
                 <span className="hidden sm:inline">My QR</span>
@@ -226,7 +228,7 @@ export default function PatientDashboard() {
               <div className="flex items-center space-x-4">
                 <Avatar className="h-16 w-16 border-2 border-white">
                   {patient.profilePictureUrl && <AvatarImage src={`http://localhost:5000${patient.profilePictureUrl}`} />}
-                  <AvatarFallback className="bg-white text-blue-600 text-lg font-semibold">
+                  <AvatarFallback className="bg-white text-blue-600 text-lg font-semibold dark:bg-gray-700 dark:text-blue-300">
                     {patient.name.split(' ').map(n => n[0]).join('')}
                   </AvatarFallback>
                 </Avatar>
@@ -258,8 +260,8 @@ export default function PatientDashboard() {
                     <FileText className="h-5 w-5 text-blue-600" />
                   </div>
                   <div>
-                    <p className="text-2xl font-bold text-gray-900">{records.length}</p>
-                    <p className="text-xs text-gray-600">Total Records</p>
+                    <p className="text-2xl font-bold text-gray-900 dark:text-white">{records.length}</p>
+                    <p className="text-xs text-gray-600 dark:text-gray-400">Total Records</p>
                   </div>
                 </div>
               </Card>
@@ -270,8 +272,8 @@ export default function PatientDashboard() {
                     <Activity className="h-5 w-5 text-green-600" />
                   </div>
                   <div>
-                    <p className="text-2xl font-bold text-gray-900">{records.filter(r => r.category === 'lab-result').length}</p>
-                    <p className="text-xs text-gray-600">Lab Results</p>
+                    <p className="text-2xl font-bold text-gray-900 dark:text-white">{records.filter(r => r.category === 'lab-result').length}</p>
+                    <p className="text-xs text-gray-600 dark:text-gray-400">Lab Results</p>
                   </div>
                 </div>
               </Card>
@@ -282,8 +284,8 @@ export default function PatientDashboard() {
                     <Shield className="h-5 w-5 text-purple-600" />
                   </div>
                   <div>
-                    <p className="text-2xl font-bold text-gray-900">{records.filter(r => r.category === 'prescription').length}</p>
-                    <p className="text-xs text-gray-600">Prescriptions</p>
+                    <p className="text-2xl font-bold text-gray-900 dark:text-white">{records.filter(r => r.category === 'prescription').length}</p>
+                    <p className="text-xs text-gray-600 dark:text-gray-400">Prescriptions</p>
                   </div>
                 </div>
               </Card>
@@ -294,8 +296,8 @@ export default function PatientDashboard() {
                     <Smartphone className="h-5 w-5 text-orange-600" />
                   </div>
                   <div>
-                    <p className="text-2xl font-bold text-gray-900">{records.filter(r => r.category === 'scan').length}</p>
-                    <p className="text-xs text-gray-600">Scans</p>
+                    <p className="text-2xl font-bold text-gray-900 dark:text-white">{records.filter(r => r.category === 'scan').length}</p>
+                    <p className="text-xs text-gray-600 dark:text-gray-400">Scans</p>
                   </div>
                 </div>
               </Card>
@@ -318,9 +320,9 @@ export default function PatientDashboard() {
                   <CardContent>
                     {records.length === 0 ? (
                       <div className="text-center py-8">
-                        <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                        <h3 className="text-lg font-medium text-gray-900 mb-2">No activity yet</h3>
-                        <p className="text-gray-600 mb-4">Upload your first medical document to get started</p>
+                        <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4 dark:text-gray-500" />
+                        <h3 className="text-lg font-medium text-gray-900 mb-2 dark:text-white">No activity yet</h3>
+                        <p className="text-gray-600 mb-4 dark:text-gray-300">Upload your first medical document to get started</p>
                         <Button onClick={() => setShowUpload(true)} size="sm">
                           <Upload className="h-4 w-4 mr-2" />
                           Upload First Record
@@ -329,11 +331,11 @@ export default function PatientDashboard() {
                     ) : (
                       <div className="space-y-3">
                         {records.slice(0, 3).map((record) => (
-                          <div key={record.id} className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                          <div key={record.id} className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg dark:bg-gray-700/50">
                             <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                             <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium text-gray-900 truncate">{record.fileName}</p>
-                              <p className="text-xs text-gray-500">{formatDate(record.uploadDate)}</p>
+                              <p className="text-sm font-medium text-gray-900 truncate dark:text-white">{record.fileName}</p>
+                              <p className="text-xs text-gray-500 dark:text-gray-400">{formatDate(record.uploadDate)}</p>
                             </div>
                             <Badge className={getCategoryColor(record.category)} variant="outline">
                               {record.category}
@@ -384,9 +386,9 @@ export default function PatientDashboard() {
                 {records.length === 0 ? (
                   <Card>
                     <CardContent className="py-16 text-center">
-                      <Lock className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                      <h3 className="text-lg font-medium text-gray-900 mb-2">No medical records yet</h3>
-                      <p className="text-gray-600 mb-4">Upload your first medical document to get started</p>
+                      <Lock className="h-12 w-12 text-gray-400 mx-auto mb-4 dark:text-gray-500" />
+                      <h3 className="text-lg font-medium text-gray-900 mb-2 dark:text-white">No medical records yet</h3>
+                      <p className="text-gray-600 mb-4 dark:text-gray-300">Upload your first medical document to get started</p>
                       <Button onClick={() => setShowUpload(true)}>
                         <Upload className="h-4 w-4 mr-2" />
                         Upload First Record
@@ -421,7 +423,7 @@ export default function PatientDashboard() {
               <CardContent className="space-y-4">
                 <div>
                   <div className="flex items-center justify-between text-sm mb-2">
-                    <span className="text-gray-600">Profile Complete</span>
+                    <span className="text-gray-600 dark:text-gray-300">Profile Complete</span>
                     <span className="font-medium">{getProfileCompleteness()}%</span>
                   </div>
                   <Progress value={getProfileCompleteness()} className="h-2" />
@@ -459,20 +461,20 @@ export default function PatientDashboard() {
               </CardHeader>
               <CardContent className="space-y-3">
                 <div>
-                  <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">Email</p>
-                  <p className="text-sm mt-1">{patient.email}</p>
+                  <p className="text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400">Email</p>
+                  <p className="text-sm mt-1 dark:text-gray-300">{patient.email}</p>
                 </div>
                 <div>
-                  <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">Phone</p>
-                  <p className="text-sm mt-1">{patient.phone}</p>
+                  <p className="text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400">Phone</p>
+                  <p className="text-sm mt-1 dark:text-gray-300">{patient.phone}</p>
                 </div>
                 <div>
-                  <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">Date of Birth</p>
-                  <p className="text-sm mt-1">{formatDate(patient.dateOfBirth)}</p>
+                  <p className="text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400">Date of Birth</p>
+                  <p className="text-sm mt-1 dark:text-gray-300">{formatDate(patient.dateOfBirth)}</p>
                 </div>
                 <div>
-                  <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">Emergency Contact</p>
-                  <p className="text-sm mt-1">{patient.emergencyContact}</p>
+                  <p className="text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400">Emergency Contact</p>
+                  <p className="text-sm mt-1 dark:text-gray-300">{patient.emergencyContact}</p>
                 </div>
               </CardContent>
             </Card>

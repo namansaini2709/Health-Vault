@@ -145,7 +145,7 @@ export default function FileUpload({ onUpload, onClose }: FileUploadProps) {
               <div className="space-y-2">
                 <FileText className="h-8 w-8 text-blue-600 mx-auto" />
                 <p className="font-medium">{selectedFile.name}</p>
-                <p className="text-sm text-gray-600">{formatFileSize(selectedFile.size)}</p>
+                <p className="text-sm text-gray-600 dark:text-gray-300">{formatFileSize(selectedFile.size)}</p>
                 <Button
                   variant="outline"
                   size="sm"
@@ -168,7 +168,7 @@ export default function FileUpload({ onUpload, onClose }: FileUploadProps) {
                     />
                   </label>
                 </p>
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-gray-500 dark:text-gray-400">
                   Supports PDF, Images, and Documents
                 </p>
               </div>

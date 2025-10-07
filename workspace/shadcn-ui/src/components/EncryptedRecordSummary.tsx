@@ -205,7 +205,7 @@ export default function EncryptedRecordSummary({ records, patientId, onDelete }:
                         {record.encryptionMetadata?.originalName || record.fileName}
                       </p>
                     </div>
-                    <div className="flex items-center gap-2 text-sm text-gray-600">
+                    <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
                       <Calendar className="h-3 w-3" />
                       {formatDate(record.uploadDate)}
                     </div>
