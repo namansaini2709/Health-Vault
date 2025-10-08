@@ -97,10 +97,10 @@ const ProviderRegister = () => {
       <div className="absolute top-4 right-4">
         <ThemeToggle />
       </div>
-      <Card className="w-full max-w-lg">
+      <Card className="w-full max-w-lg dark:bg-gray-800 dark:border-gray-700">
         <CardHeader>
-          <CardTitle>Provider Registration</CardTitle>
-          <CardDescription>Fill in the details to create your account.</CardDescription>
+          <CardTitle className="dark:text-white">Provider Registration</CardTitle>
+          <CardDescription className="dark:text-gray-300">Fill in the details to create your account.</CardDescription>
         </CardHeader>
         <CardContent>
           <form className="space-y-4" onSubmit={handleRegister}>
@@ -135,9 +135,9 @@ const ProviderRegister = () => {
             <Button type="submit" className="w-full">Register</Button>
           </form>
           <div className="my-4 flex items-center">
-            <div className="flex-grow border-t border-gray-300"></div>
-            <span className="mx-4 text-gray-500">OR</span>
-            <div className="flex-grow border-t border-gray-300"></div>
+            <div className="flex-grow border-t border-gray-300 dark:border-gray-600"></div>
+            <span className="mx-4 text-gray-500 dark:text-gray-400">OR</span>
+            <div className="flex-grow border-t border-gray-300 dark:border-gray-600"></div>
           </div>
           <GoogleLogin
             onSuccess={handleGoogleLoginSuccess}
@@ -150,10 +150,10 @@ const ProviderRegister = () => {
 
       {/* Duplicate User Dialog */}
       <Dialog open={showDuplicateDialog} onOpenChange={setShowDuplicateDialog}>
-        <DialogContent>
+        <DialogContent className="dark:bg-gray-800 dark:border-gray-700">
           <DialogHeader>
-            <DialogTitle>Account Already Exists</DialogTitle>
-            <DialogDescription>
+            <DialogTitle className="dark:text-white">Account Already Exists</DialogTitle>
+            <DialogDescription className="dark:text-gray-300">
               You are already registered as a provider with this email or license number. Would you like to login instead?
             </DialogDescription>
           </DialogHeader>

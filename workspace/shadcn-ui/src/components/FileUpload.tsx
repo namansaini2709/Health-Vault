@@ -110,16 +110,16 @@ export default function FileUpload({ onUpload, onClose }: FileUploadProps) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <Card className="w-full max-w-md">
+    <div className="fixed inset-0 bg-black bg-opacity-50 dark:bg-black dark:bg-opacity-70 flex items-center justify-center z-50 p-4">
+      <Card className="w-full max-w-md dark:bg-gray-800 dark:border-gray-700">
         <CardHeader>
           <div className="flex justify-between items-center">
             <div>
-              <CardTitle className="flex items-center gap-2">
+              <CardTitle className="flex items-center gap-2 dark:text-white">
                 <Lock className="h-5 w-5" />
                 Upload Medical Record
               </CardTitle>
-              <CardDescription>
+              <CardDescription className="dark:text-gray-300">
                 Add a new document to your health vault
               </CardDescription>
             </div>
@@ -133,8 +133,8 @@ export default function FileUpload({ onUpload, onClose }: FileUploadProps) {
           <div
             className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
               dragActive
-                ? 'border-blue-500 bg-blue-50'
-                : 'border-gray-300 hover:border-gray-400'
+                ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+                : 'border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500'
             }`}
             onDragEnter={handleDrag}
             onDragLeave={handleDrag}
@@ -143,8 +143,8 @@ export default function FileUpload({ onUpload, onClose }: FileUploadProps) {
           >
             {selectedFile ? (
               <div className="space-y-2">
-                <FileText className="h-8 w-8 text-blue-600 mx-auto" />
-                <p className="font-medium">{selectedFile.name}</p>
+                <FileText className="h-8 w-8 text-blue-600 dark:text-blue-400 mx-auto" />
+                <p className="font-medium dark:text-white">{selectedFile.name}</p>
                 <p className="text-sm text-gray-600 dark:text-gray-300">{formatFileSize(selectedFile.size)}</p>
                 <Button
                   variant="outline"
@@ -156,10 +156,10 @@ export default function FileUpload({ onUpload, onClose }: FileUploadProps) {
               </div>
             ) : (
               <div className="space-y-2">
-                <Upload className="h-8 w-8 text-gray-400 mx-auto" />
-                <p className="text-sm text-gray-600">
+                <Upload className="h-8 w-8 text-gray-400 dark:text-gray-500 mx-auto" />
+                <p className="text-sm text-gray-600 dark:text-gray-300">
                   Drag and drop your file here, or{' '}
-                  <label className="text-blue-600 hover:text-blue-700 cursor-pointer">
+                  <label className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 cursor-pointer">
                     browse
                     <input
                       type="file"
@@ -192,9 +192,9 @@ export default function FileUpload({ onUpload, onClose }: FileUploadProps) {
             </Select>
           </div>
 
-          <div className="flex items-center p-3 bg-blue-50 rounded-lg">
-            <Lock className="h-4 w-4 mr-2 text-blue-600" />
-            <span className="text-sm text-blue-800">Your file will be encrypted before upload for enhanced privacy</span>
+          <div className="flex items-center p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-100 dark:border-blue-800">
+            <Lock className="h-4 w-4 mr-2 text-blue-600 dark:text-blue-400" />
+            <span className="text-sm text-blue-800 dark:text-blue-200">Your file will be encrypted before upload for enhanced privacy</span>
           </div>
 
           {/* Upload Button */}

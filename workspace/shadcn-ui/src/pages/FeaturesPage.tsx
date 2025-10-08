@@ -58,15 +58,15 @@ export default function FeaturesPage() {
 
           <div className="grid md:grid-cols-2 gap-8">
             {/* QR Code Access */}
-            <Card className="border-2 hover:shadow-xl transition-all">
+            <Card className="border-2 hover:shadow-xl transition-all dark:bg-gray-800 dark:border-gray-700">
               <CardHeader>
                 <div className="flex items-center gap-4 mb-4">
-                  <div className="w-16 h-16 bg-blue-100 rounded-lg flex items-center justify-center">
-                    <QrCode className="h-8 w-8 text-blue-600" />
+                  <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
+                    <QrCode className="h-8 w-8 text-blue-600 dark:text-blue-400" />
                   </div>
                   <div>
-                    <CardTitle className="text-2xl">QR Code Access</CardTitle>
-                    <CardDescription>Instant medical history sharing</CardDescription>
+                    <CardTitle className="text-2xl dark:text-white">QR Code Access</CardTitle>
+                    <CardDescription className="dark:text-gray-300">Instant medical history sharing</CardDescription>
                   </div>
                 </div>
               </CardHeader>
@@ -92,15 +92,15 @@ export default function FeaturesPage() {
             </Card>
 
             {/* Encryption */}
-            <Card className="border-2 hover:shadow-xl transition-all">
+            <Card className="border-2 hover:shadow-xl transition-all dark:bg-gray-800 dark:border-gray-700">
               <CardHeader>
                 <div className="flex items-center gap-4 mb-4">
-                  <div className="w-16 h-16 bg-green-100 rounded-lg flex items-center justify-center">
-                    <Shield className="h-8 w-8 text-green-600" />
+                  <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center">
+                    <Shield className="h-8 w-8 text-green-600 dark:text-green-400" />
                   </div>
                   <div>
-                    <CardTitle className="text-2xl">End-to-End Encryption</CardTitle>
-                    <CardDescription>Bank-level security</CardDescription>
+                    <CardTitle className="text-2xl dark:text-white">End-to-End Encryption</CardTitle>
+                    <CardDescription className="dark:text-gray-300">Bank-level security</CardDescription>
                   </div>
                 </div>
               </CardHeader>
@@ -126,15 +126,15 @@ export default function FeaturesPage() {
             </Card>
 
             {/* AI Insights */}
-            <Card className="border-2 hover:shadow-xl transition-all">
+            <Card className="border-2 hover:shadow-xl transition-all dark:bg-gray-800 dark:border-gray-700">
               <CardHeader>
                 <div className="flex items-center gap-4 mb-4">
-                  <div className="w-16 h-16 bg-purple-100 rounded-lg flex items-center justify-center">
-                    <Brain className="h-8 w-8 text-purple-600" />
+                  <div className="w-16 h-16 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center">
+                    <Brain className="h-8 w-8 text-purple-600 dark:text-purple-400" />
                   </div>
                   <div>
-                    <CardTitle className="text-2xl">AI-Powered Insights</CardTitle>
-                    <CardDescription>Intelligent health analysis</CardDescription>
+                    <CardTitle className="text-2xl dark:text-white">AI-Powered Insights</CardTitle>
+                    <CardDescription className="dark:text-gray-300">Intelligent health analysis</CardDescription>
                   </div>
                 </div>
               </CardHeader>
@@ -160,15 +160,15 @@ export default function FeaturesPage() {
             </Card>
 
             {/* Mobile Access */}
-            <Card className="border-2 hover:shadow-xl transition-all">
+            <Card className="border-2 hover:shadow-xl transition-all dark:bg-gray-800 dark:border-gray-700">
               <CardHeader>
                 <div className="flex items-center gap-4 mb-4">
-                  <div className="w-16 h-16 bg-orange-100 rounded-lg flex items-center justify-center">
-                    <Smartphone className="h-8 w-8 text-orange-600" />
+                  <div className="w-16 h-16 bg-orange-100 dark:bg-orange-900/30 rounded-lg flex items-center justify-center">
+                    <Smartphone className="h-8 w-8 text-orange-600 dark:text-orange-400" />
                   </div>
                   <div>
-                    <CardTitle className="text-2xl">Access Anywhere</CardTitle>
-                    <CardDescription>Cross-platform availability</CardDescription>
+                    <CardTitle className="text-2xl dark:text-white">Access Anywhere</CardTitle>
+                    <CardDescription className="dark:text-gray-300">Cross-platform availability</CardDescription>
                   </div>
                 </div>
               </CardHeader>
@@ -202,60 +202,60 @@ export default function FeaturesPage() {
           <h2 className="text-3xl font-bold text-gray-900 mb-12 text-center dark:text-white">Advanced Capabilities</h2>
 
           <div className="grid md:grid-cols-3 gap-6">
-            <Card>
+            <Card className="dark:bg-gray-800 dark:border-gray-700">
               <CardHeader>
-                <UserCheck className="h-10 w-10 text-blue-600 mb-2" />
-                <CardTitle>Patient Control</CardTitle>
+                <UserCheck className="h-10 w-10 text-blue-600 dark:text-blue-400 mb-2" />
+                <CardTitle className="dark:text-white">Patient Control</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-gray-600 dark:text-gray-300">Full control over who can access your records and for how long. Revoke access anytime.</p>
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="dark:bg-gray-800 dark:border-gray-700">
               <CardHeader>
-                <Stethoscope className="h-10 w-10 text-blue-600 mb-2" />
-                <CardTitle>Provider Dashboard</CardTitle>
+                <Stethoscope className="h-10 w-10 text-blue-600 dark:text-blue-400 mb-2" />
+                <CardTitle className="dark:text-white">Provider Dashboard</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-gray-600 dark:text-gray-300">Healthcare providers get dedicated dashboards with patient analytics and insights.</p>
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="dark:bg-gray-800 dark:border-gray-700">
               <CardHeader>
-                <FileText className="h-10 w-10 text-blue-600 mb-2" />
-                <CardTitle>Document Management</CardTitle>
+                <FileText className="h-10 w-10 text-blue-600 dark:text-blue-400 mb-2" />
+                <CardTitle className="dark:text-white">Document Management</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-gray-600 dark:text-gray-300">Upload, organize, and categorize all types of medical documents in one place.</p>
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="dark:bg-gray-800 dark:border-gray-700">
               <CardHeader>
-                <BarChart className="h-10 w-10 text-blue-600 mb-2" />
-                <CardTitle>Health Analytics</CardTitle>
+                <BarChart className="h-10 w-10 text-blue-600 dark:text-blue-400 mb-2" />
+                <CardTitle className="dark:text-white">Health Analytics</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-gray-600 dark:text-gray-300">Visualize trends in your health data with interactive charts and graphs.</p>
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="dark:bg-gray-800 dark:border-gray-700">
               <CardHeader>
-                <Bell className="h-10 w-10 text-blue-600 mb-2" />
-                <CardTitle>Smart Reminders</CardTitle>
+                <Bell className="h-10 w-10 text-blue-600 dark:text-blue-400 mb-2" />
+                <CardTitle className="dark:text-white">Smart Reminders</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-gray-600 dark:text-gray-300">Get notifications for medication refills, appointments, and health checkups.</p>
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="dark:bg-gray-800 dark:border-gray-700">
               <CardHeader>
-                <Users className="h-10 w-10 text-blue-600 mb-2" />
-                <CardTitle>Family Sharing</CardTitle>
+                <Users className="h-10 w-10 text-blue-600 dark:text-blue-400 mb-2" />
+                <CardTitle className="dark:text-white">Family Sharing</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-gray-600 dark:text-gray-300">Manage medical records for your entire family from a single account.</p>

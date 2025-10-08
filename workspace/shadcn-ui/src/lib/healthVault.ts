@@ -1,5 +1,16 @@
 import apiClient from './apiService';
 
+export interface AISummaryData {
+  text: string;
+  keyFindings?: string[];
+  conditions?: string[];
+  medications?: string[];
+  recommendations?: string[];
+  riskFactors?: string[];
+  patientSummary?: string;
+  doctorSummary?: string;
+}
+
 export interface MedicalRecord {
   id: string;
   patientId: string;
@@ -10,6 +21,7 @@ export interface MedicalRecord {
   uploadDate: string;
   summary?: string;
   encryptionMetadata?: any; // For encrypted files
+  aiSummary?: AISummaryData;
 }
 
 export interface Patient {
@@ -100,7 +112,8 @@ export class HealthVaultService {
     category: 'prescription' | 'lab-result' | 'scan' | 'report' | 'other',
     summary?: string,
     encryptionKey?: string,
-    encryptionMetadata?: any
+    encryptionMetadata?: any,
+    pdfText?: string
   ): Promise<MedicalRecord> {
     try {
       // Create form data for file upload
@@ -111,6 +124,12 @@ export class HealthVaultService {
         formData.append('summary', summary);
       }
       formData.append('patientId', patientId);
+
+      // Add extracted PDF text if provided
+      if (pdfText) {
+        formData.append('pdfText', pdfText);
+        console.log(`Adding extracted PDF text (${pdfText.length} chars) to form data`);
+      }
 
       // Add encryption metadata if provided
       if (encryptionKey && encryptionMetadata) {
@@ -270,6 +289,17 @@ export class HealthVaultService {
       await apiClient.delete(`/medical-records/${recordId}`);
     } catch (error) {
       console.error('Error deleting medical record:', error);
+      throw error;
+    }
+  }
+
+  static async generatePatientSummaries(patientId: string, force: boolean = false): Promise<void> {
+    try {
+      console.log('Generating AI summaries for patient:', patientId, force ? '(force regenerate)' : '');
+      const url = force ? `/summarize-patient/${patientId}?force=true` : `/summarize-patient/${patientId}`;
+      await apiClient.post(url);
+    } catch (error) {
+      console.error('Error generating patient summaries:', error);
       throw error;
     }
   }

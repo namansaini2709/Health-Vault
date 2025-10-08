@@ -14,8 +14,10 @@ import FileUpload from '@/components/FileUpload';
 import QRGenerator from '@/components/QRGenerator';
 import PatientHealthSummary from '@/components/PatientHealthSummary';
 import EncryptedRecordSummary from '@/components/EncryptedRecordSummary';
+import AccessManagement from '@/components/AccessManagement';
 import { createEncryptedFile, generateEncryptionKey, keyToHexString, storeKeyInSession } from '@/lib/encryptionUtils';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
+import { extractPDFText } from '@/lib/pdfExtractor';
 
 type RecordCategory = 'prescription' | 'lab-result' | 'scan' | 'report' | 'other';
 
@@ -50,6 +52,25 @@ export default function PatientDashboard() {
     toast.success('Logged out successfully');
   };
 
+  const refreshPatientData = async () => {
+    if (!patient) return;
+
+    try {
+      // Force regenerate AI summaries for all records with PDF content extraction
+      await HealthVaultService.generatePatientSummaries(patient.id, true);
+
+      // Fetch the updated patient data with the new summaries
+      const updatedPatient = await HealthVaultService.getPatient(patient.id);
+      if (updatedPatient) {
+        setPatient(updatedPatient);
+        setRecords(updatedPatient.records || []);
+      }
+    } catch (error) {
+      console.error('Error refreshing patient data:', error);
+      throw error;
+    }
+  };
+
   const handleFileUpload = async (file: File, category: string) => {
     if (!patient) {
       console.error('No patient data available for upload');
@@ -65,13 +86,21 @@ export default function PatientDashboard() {
     }
 
     try {
-      toast.loading('Encrypting file...');
-
       console.log('Selected file:', {
         name: file.name,
         type: file.type,
         size: file.size
       });
+
+      // Extract PDF text before encryption (if PDF)
+      let pdfText = '';
+      if (file.type === 'application/pdf') {
+        toast.loading('Extracting text from PDF...');
+        pdfText = await extractPDFText(file);
+        console.log(`Extracted ${pdfText.length} characters from PDF`);
+      }
+
+      toast.loading('Encrypting file...');
 
       // Generate encryption key and encrypt file
       const encryptionKey = await generateEncryptionKey();
@@ -103,7 +132,8 @@ export default function PatientDashboard() {
         category as RecordCategory,
         summary,
         encryptionKeyHex, // Send encryption key to backend
-        encryptionMetadata // Send metadata to backend
+        encryptionMetadata, // Send metadata to backend
+        pdfText // Send extracted PDF text
       );
 
       console.log('Record uploaded successfully:', newRecord);
@@ -305,10 +335,14 @@ export default function PatientDashboard() {
 
             {/* Main Tabs */}
             <Tabs defaultValue="overview" className="w-full">
-              <TabsList className="grid w-full grid-cols-3 mb-6">
+              <TabsList className="grid w-full grid-cols-4 mb-6">
                 <TabsTrigger value="overview" className="text-xs sm:text-sm">Overview</TabsTrigger>
                 <TabsTrigger value="records" className="text-xs sm:text-sm">Records</TabsTrigger>
                 <TabsTrigger value="insights" className="text-xs sm:text-sm">AI Insights</TabsTrigger>
+                <TabsTrigger value="access" className="text-xs sm:text-sm">
+                  <Shield className="h-3 w-3 mr-1" />
+                  Access
+                </TabsTrigger>
               </TabsList>
               
               <TabsContent value="overview" className="space-y-6">
@@ -401,7 +435,11 @@ export default function PatientDashboard() {
               </TabsContent>
               
               <TabsContent value="insights">
-                <PatientHealthSummary records={records} />
+                <PatientHealthSummary records={records} onReload={refreshPatientData} />
+              </TabsContent>
+
+              <TabsContent value="access">
+                <AccessManagement patientId={patient.id} />
               </TabsContent>
             </Tabs>
           </div>

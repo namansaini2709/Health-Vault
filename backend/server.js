@@ -11,6 +11,7 @@ const fs = require('fs');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const pdfParse = require('pdf-parse');
 require('dotenv').config();
 
 const app = express();
@@ -82,6 +83,8 @@ const medicalRecordSchema = new mongoose.Schema({
     conditions: [String],
     recommendations: [String],
     riskFactors: [String],
+    patientSummary: String,
+    doctorSummary: String,
     generatedAt: Date,
     model: String
   },
@@ -89,7 +92,9 @@ const medicalRecordSchema = new mongoose.Schema({
   encryptionKey: String, // Hex string of the encryption key
   encryptionIV: [Number], // Initialization vector as array of numbers
   originalFileName: String, // Original filename before encryption
-  originalFileType: String // Original file type before encryption
+  originalFileType: String, // Original file type before encryption
+  // Extracted PDF text (extracted client-side before encryption)
+  pdfText: String // Extracted text content from PDF for AI analysis
 }, { timestamps: true });
 
 const MedicalRecord = mongoose.model('MedicalRecord', medicalRecordSchema);
@@ -105,6 +110,34 @@ const doctorSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 const Doctor = mongoose.model('Doctor', doctorSchema);
+
+// Access Request Schema for patient-doctor access control
+const accessRequestSchema = new mongoose.Schema({
+  doctorId: { type: String, required: true },
+  patientId: { type: String, required: true },
+  patientName: { type: String, required: true },
+  patientEmail: { type: String, required: true },
+  patientQRCode: { type: String, required: true },
+  doctorName: { type: String, required: true },
+  doctorSpecialty: { type: String, required: true },
+  requestedAt: { type: Date, default: Date.now },
+  status: {
+    type: String,
+    enum: ['pending', 'granted', 'denied', 'revoked'],
+    default: 'pending'
+  },
+  respondedAt: Date,
+  encryptionKeys: [{
+    recordId: String,
+    key: String,
+    iv: [Number],
+    originalFileName: String,
+    originalFileType: String
+  }],
+  seenByDoctor: { type: Boolean, default: false }
+}, { timestamps: true });
+
+const AccessRequest = mongoose.model('AccessRequest', accessRequestSchema);
 
 // Helper function to format medical record with encryption metadata
 // includeEncryptionMetadata: Set to true only for patient viewing their own records
@@ -137,8 +170,20 @@ function formatMedicalRecord(record, includeEncryptionMetadata = false) {
 // Initialize Google Gemini AI
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 
+// Extract text from PDF
+async function extractPDFText(filePath) {
+  try {
+    const dataBuffer = fs.readFileSync(filePath);
+    const data = await pdfParse(dataBuffer);
+    return data.text;
+  } catch (error) {
+    console.error('Error extracting PDF text:', error);
+    return null;
+  }
+}
+
 // AI Summarization Service using Google Generative AI SDK
-async function summarizeWithGemini(fileName, fileType, category) {
+async function summarizeWithGemini(fileName, fileType, category, pdfText) {
   try {
     if (!process.env.GEMINI_API_KEY || process.env.GEMINI_API_KEY === 'your_gemini_api_key_here') {
       console.warn('Gemini API key not configured, using mock summarization');
@@ -148,32 +193,81 @@ async function summarizeWithGemini(fileName, fileType, category) {
     // Use Google Generative AI SDK with gemini-2.5-flash
     const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
-    const promptText = `You are a medical AI assistant analyzing a medical document.
+    // Only generate summary if we have actual PDF text content
+    if (!pdfText) {
+      console.warn('No PDF text provided, returning empty summary');
+      return {
+        text: `${category} document: ${fileName}`,
+        keyFindings: [],
+        medications: [],
+        conditions: [],
+        recommendations: [],
+        riskFactors: [],
+        generatedAt: new Date(),
+        model: 'no-content'
+      };
+    }
 
+    console.log(`Using extracted PDF text (${pdfText.length} chars) for AI analysis`);
+
+    const promptText = `You are an AI medical assistant analyzing a medical document.
+
+-----------------------------
+DOCUMENT METADATA
 File Name: ${fileName}
-File Type: ${fileType}
 Category: ${category}
 
-Based on the file name and category, please provide an intelligent analysis of what this medical record likely contains:
+DOCUMENT CONTENT:
+${pdfText}
+-----------------------------
 
-1. A brief summary (2-3 sentences) of what this type of medical document typically includes
-2. Key findings that would be relevant for this category
-3. Medications that might be mentioned (empty array if unlikely for this category)
-4. Medical conditions that might be identified (empty array if not applicable)
-5. Recommendations for follow-up based on this document type
-6. Risk factors that might be relevant (empty array if not applicable)
+TASK: Extract structured data AND create two distinct summaries.
 
-Respond in this exact JSON format:
+## STEP 1: EXTRACT STRUCTURED DATA (from document only)
+- keyFindings: Clinical findings, lab values, symptoms
+- medications: Medication names mentioned
+- conditions: Diagnoses or medical conditions stated
+- recommendations: Follow-up or treatment recommendations
+- riskFactors: Risk factors mentioned
+
+## STEP 2: PATIENT SUMMARY (MAX 2-3 SHORT SENTENCES)
+Write for someone with no medical background. DO NOT repeat the report text.
+Focus ONLY on:
+✓ Bottom line: What does this mean for the patient's health?
+✓ What should they know or do next?
+✓ Use simple analogies or everyday language
+
+Example style: "Your heart is working well with no concerning issues found. The slight cholesterol elevation means you should focus on healthy eating. Follow up with your doctor in 3 months to recheck levels."
+
+## STEP 3: DOCTOR SUMMARY (MAX 3-4 SENTENCES)
+Write like a consulting physician. DO NOT just copy the report.
+Focus ONLY on:
+✓ Clinical significance of findings
+✓ Risk stratification (if applicable)
+✓ Differential considerations or patterns
+✓ Evidence-based next steps
+
+Example style: "Findings suggest early-stage metabolic syndrome with LDL 145 mg/dL and fasting glucose 118 mg/dL. ASCVD risk score approximately 7.5% over 10 years. Consider statins per ACC/AHA guidelines and lifestyle modification. Reassess lipid panel and HbA1c in 3 months."
+
+---
+
+OUTPUT FORMAT (valid JSON only):
 {
-  "text": "summary text here",
-  "keyFindings": ["finding1", "finding2"],
-  "medications": ["med1", "med2"],
-  "conditions": ["condition1"],
-  "recommendations": ["recommendation1"],
-  "riskFactors": ["risk1"]
+  "text": "One sentence technical summary",
+  "keyFindings": [],
+  "medications": [],
+  "conditions": [],
+  "recommendations": [],
+  "riskFactors": [],
+  "patientSummary": "2-3 concise sentences in plain English",
+  "doctorSummary": "3-4 concise clinical sentences with assessment & plan"
 }
 
-IMPORTANT: Only return valid JSON, no additional text.`;
+CRITICAL RULES:
+- DO NOT copy or paraphrase report text
+- Patient summary: Simple, actionable, reassuring or concerning as needed
+- Doctor summary: Clinical interpretation, not description
+- Be concise - quality over quantity`;
 
     const result = await model.generateContent(promptText);
     const response = await result.response;
@@ -202,6 +296,31 @@ IMPORTANT: Only return valid JSON, no additional text.`;
 
 function getIntelligentMockSummary(fileName, category) {
   const lowerFileName = fileName.toLowerCase();
+
+  // Lung / Respiratory / Pulmonary specific
+  if (lowerFileName.includes('lung') || lowerFileName.includes('pulmonary') || lowerFileName.includes('respiratory') || lowerFileName.includes('copd') || lowerFileName.includes('asthma')) {
+    return {
+      text: `Pulmonary assessment report for ${fileName.split('-')[0] || 'patient'}. Detailed evaluation of lung function and respiratory health with imaging findings.`,
+      keyFindings: [
+        'Chest X-ray shows bilateral infiltrates',
+        'Pulmonary function tests indicate reduced lung capacity',
+        'Oxygen saturation levels monitored',
+        'Chronic obstructive changes noted'
+      ],
+      medications: ['Bronchodilators (Albuterol)', 'Inhaled corticosteroids (Budesonide)', 'Oxygen therapy as needed'],
+      conditions: ['Chronic Obstructive Pulmonary Disease (COPD)', 'Chronic Bronchitis', 'Reduced Lung Function'],
+      recommendations: [
+        'Use prescribed inhalers regularly',
+        'Pulmonary rehabilitation program',
+        'Avoid smoking and air pollutants',
+        'Monitor oxygen levels at home',
+        'Follow-up chest imaging in 3 months'
+      ],
+      riskFactors: ['Progressive lung function decline', 'Risk of respiratory infections', 'Potential for acute exacerbations', 'Reduced exercise tolerance'],
+      generatedAt: new Date(),
+      model: 'intelligent-mock'
+    };
+  }
 
   // Cardiology specific
   if (lowerFileName.includes('cardio') || lowerFileName.includes('heart') || lowerFileName.includes('ecg') || lowerFileName.includes('ekg')) {
@@ -481,10 +600,15 @@ app.post('/api/medical-records', upload.single('file'), async (req, res) => {
     console.log('Request Body:', req.body);
     console.log('File Object:', req.file);
 
-    const { category, summary, patientId, encryptionKey, encryptionIV, originalFileName, originalFileType } = req.body;
+    const { category, summary, patientId, encryptionKey, encryptionIV, originalFileName, originalFileType, pdfText } = req.body;
 
     // Parse encryption metadata if provided (sent as JSON strings)
     const parsedIV = encryptionIV ? JSON.parse(encryptionIV) : null;
+
+    // Log extracted PDF text
+    if (pdfText) {
+      console.log(`Received extracted PDF text (${pdfText.length} chars)`);
+    }
 
     const medicalRecord = new MedicalRecord({
       patientId,
@@ -497,13 +621,46 @@ app.post('/api/medical-records', upload.single('file'), async (req, res) => {
       encryptionKey: encryptionKey || null,
       encryptionIV: parsedIV,
       originalFileName: originalFileName || null,
-      originalFileType: originalFileType || null
+      originalFileType: originalFileType || null,
+      // Store extracted PDF text
+      pdfText: pdfText || null
     });
 
     const savedRecord = await medicalRecord.save();
 
     // Associate the record with the patient
     await User.findByIdAndUpdate(patientId, { $push: { records: savedRecord._id } });
+
+    // Automatically share encryption key with doctors who have granted access
+    if (encryptionKey && parsedIV) {
+      console.log('Sharing encryption key with doctors who have access...');
+
+      // Find all granted access requests for this patient
+      const grantedAccessRequests = await AccessRequest.find({
+        patientId: patientId,
+        status: 'granted'
+      });
+
+      console.log(`Found ${grantedAccessRequests.length} granted access request(s)`);
+
+      // Add encryption key to each granted access request
+      for (const request of grantedAccessRequests) {
+        const keyData = {
+          recordId: savedRecord._id.toString(),
+          key: encryptionKey,
+          iv: parsedIV,
+          originalFileName: originalFileName || savedRecord.fileName,
+          originalFileType: originalFileType || savedRecord.fileType
+        };
+
+        await AccessRequest.findByIdAndUpdate(
+          request._id,
+          { $push: { encryptionKeys: keyData } }
+        );
+
+        console.log(`Added encryption key for record ${savedRecord._id} to access request ${request._id}`);
+      }
+    }
 
     // Convert MongoDB _id to id and include encryption metadata for frontend
     const recordResponse = {
@@ -539,7 +696,7 @@ app.get('/api/medical-records', async (req, res) => {
   try {
     const { patientId } = req.query;
     const records = await MedicalRecord.find({ patientId });
-    res.json(records.map(formatMedicalRecord));
+    res.json(records.map(record => formatMedicalRecord(record, true))); // Include encryption metadata
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
@@ -806,12 +963,14 @@ app.post('/api/summarize-record/:recordId', async (req, res) => {
       });
     }
 
-    // Generate AI summary
+    // Generate AI summary with file path
     console.log('Generating new AI summary with Gemini...');
+    const filePath = path.join(__dirname, record.fileUrl);
     const aiSummary = await summarizeWithGemini(
       record.fileName,
       record.fileType,
-      record.category
+      record.category,
+      filePath
     );
 
     // Update the record with AI summary
@@ -834,7 +993,8 @@ app.post('/api/summarize-record/:recordId', async (req, res) => {
 app.post('/api/summarize-patient/:patientId', async (req, res) => {
   try {
     const { patientId } = req.params;
-    console.log('Generating AI summaries for patient:', patientId);
+    const { force } = req.query; // Allow forcing regeneration
+    console.log('Generating AI summaries for patient:', patientId, force ? '(force regenerate)' : '');
 
     const records = await MedicalRecord.find({ patientId });
 
@@ -844,11 +1004,15 @@ app.post('/api/summarize-patient/:patientId', async (req, res) => {
 
     const summaries = [];
     for (const record of records) {
-      if (!record.aiSummary || !record.aiSummary.text) {
+      // Force regenerate all summaries or only generate if missing
+      if (force || !record.aiSummary || !record.aiSummary.text) {
+        console.log(`Generating AI summary for ${record.fileName}...`);
+        // Use stored PDF text (extracted client-side before encryption)
         const aiSummary = await summarizeWithGemini(
           record.fileName,
           record.fileType,
-          record.category
+          record.category,
+          record.pdfText // Use stored extracted text instead of file path
         );
         record.aiSummary = aiSummary;
         await record.save();
@@ -874,6 +1038,351 @@ app.post('/api/summarize-patient/:patientId', async (req, res) => {
   } catch (error) {
     console.error('Error generating batch AI summaries:', error);
     res.status(500).json({ error: 'Failed to generate AI summaries', message: error.message });
+  }
+});
+
+// Migration endpoint to share existing encryption keys with doctors who have access
+app.post('/api/migrate-encryption-keys', async (req, res) => {
+  try {
+    console.log('Starting encryption key migration...');
+
+    // Find all granted access requests
+    const grantedAccessRequests = await AccessRequest.find({ status: 'granted' });
+    console.log(`Found ${grantedAccessRequests.length} granted access requests`);
+
+    let migratedCount = 0;
+    let skippedCount = 0;
+
+    for (const request of grantedAccessRequests) {
+      // Get all medical records for this patient
+      const records = await MedicalRecord.find({ patientId: request.patientId });
+      console.log(`Processing ${records.length} records for patient ${request.patientId}`);
+
+      for (const record of records) {
+        // Check if this record has encryption data
+        if (record.encryptionKey && record.encryptionIV) {
+          // Check if this key is already in the access request
+          const keyExists = request.encryptionKeys.some(
+            k => k.recordId === record._id.toString()
+          );
+
+          if (!keyExists) {
+            // Add the encryption key to the access request
+            const keyData = {
+              recordId: record._id.toString(),
+              key: record.encryptionKey,
+              iv: record.encryptionIV,
+              originalFileName: record.originalFileName || record.fileName,
+              originalFileType: record.originalFileType || record.fileType
+            };
+
+            await AccessRequest.findByIdAndUpdate(
+              request._id,
+              { $push: { encryptionKeys: keyData } }
+            );
+
+            migratedCount++;
+            console.log(`Migrated key for record ${record._id} to access request ${request._id}`);
+          } else {
+            skippedCount++;
+          }
+        }
+      }
+    }
+
+    console.log(`Migration complete: ${migratedCount} keys migrated, ${skippedCount} keys skipped (already exist)`);
+    res.json({
+      success: true,
+      migratedCount,
+      skippedCount,
+      totalAccessRequests: grantedAccessRequests.length
+    });
+  } catch (error) {
+    console.error('Error during encryption key migration:', error);
+    res.status(500).json({ error: 'Migration failed', message: error.message });
+  }
+});
+
+// ============================================
+// ACCESS CONTROL ENDPOINTS
+// ============================================
+
+// Doctor sends access request to patient via QR code
+app.post('/api/access-requests', async (req, res) => {
+  try {
+    const { doctorId, patientQRCode } = req.body;
+
+    // Find patient by QR code
+    const patient = await User.findOne({ qrCode: patientQRCode });
+    if (!patient) {
+      return res.status(404).json({ error: 'Patient not found with this QR code' });
+    }
+
+    // Find doctor
+    const doctor = await Doctor.findById(doctorId);
+    if (!doctor) {
+      return res.status(404).json({ error: 'Doctor not found' });
+    }
+
+    // Check if request already exists
+    const existingRequest = await AccessRequest.findOne({
+      doctorId,
+      patientId: patient._id.toString(),
+      status: { $in: ['pending', 'granted'] }
+    });
+
+    if (existingRequest) {
+      return res.status(400).json({ error: 'Access request already exists' });
+    }
+
+    // Create new access request
+    const accessRequest = new AccessRequest({
+      doctorId,
+      patientId: patient._id.toString(),
+      patientName: patient.name,
+      patientEmail: patient.email,
+      patientQRCode: patient.qrCode,
+      doctorName: doctor.name,
+      doctorSpecialty: doctor.specialty,
+      encryptionKeys: [],
+      seenByDoctor: false
+    });
+
+    await accessRequest.save();
+    res.status(201).json(accessRequest);
+  } catch (error) {
+    console.error('Error creating access request:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get doctor's pending access requests
+app.get('/api/access-requests/doctor/:doctorId/pending', async (req, res) => {
+  try {
+    const { doctorId } = req.params;
+    const requests = await AccessRequest.find({ doctorId, status: 'pending' }).sort({ requestedAt: -1 });
+    res.json(requests);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get doctor's granted patients
+app.get('/api/access-requests/doctor/:doctorId/granted', async (req, res) => {
+  try {
+    const { doctorId } = req.params;
+    const requests = await AccessRequest.find({ doctorId, status: 'granted' }).sort({ respondedAt: -1 });
+
+    // Add actual record count for each patient
+    const requestsWithCount = await Promise.all(requests.map(async (request) => {
+      const recordCount = await MedicalRecord.countDocuments({ patientId: request.patientId });
+      return {
+        ...request.toObject(),
+        recordCount
+      };
+    }));
+
+    res.json(requestsWithCount);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get doctor's request history (granted, denied, revoked)
+app.get('/api/access-requests/doctor/:doctorId/history', async (req, res) => {
+  try {
+    const { doctorId } = req.params;
+    const requests = await AccessRequest.find({
+      doctorId,
+      status: { $in: ['granted', 'denied', 'revoked'] }
+    }).sort({ respondedAt: -1 });
+    res.json(requests);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get unseen count for doctor
+app.get('/api/access-requests/doctor/:doctorId/unseen-count', async (req, res) => {
+  try {
+    const { doctorId } = req.params;
+    const count = await AccessRequest.countDocuments({
+      doctorId,
+      status: { $in: ['granted', 'denied'] },
+      seenByDoctor: false
+    });
+    res.json({ count });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Mark request as seen by doctor
+app.put('/api/access-requests/:requestId/mark-seen', async (req, res) => {
+  try {
+    const { requestId } = req.params;
+    const request = await AccessRequest.findByIdAndUpdate(
+      requestId,
+      { seenByDoctor: true },
+      { new: true }
+    );
+    if (!request) {
+      return res.status(404).json({ error: 'Request not found' });
+    }
+    res.json(request);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get patient's pending access requests
+app.get('/api/access-requests/patient/:patientId/pending', async (req, res) => {
+  try {
+    const { patientId } = req.params;
+    const requests = await AccessRequest.find({ patientId, status: 'pending' }).sort({ requestedAt: -1 });
+    res.json(requests);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get patient's granted permissions
+app.get('/api/access-requests/patient/:patientId/granted', async (req, res) => {
+  try {
+    const { patientId } = req.params;
+    const requests = await AccessRequest.find({ patientId, status: 'granted' }).sort({ respondedAt: -1 });
+    res.json(requests);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Patient grants access to doctor
+app.put('/api/access-requests/:requestId/grant', async (req, res) => {
+  try {
+    const { requestId } = req.params;
+    const { encryptionKeys } = req.body;
+
+    const request = await AccessRequest.findByIdAndUpdate(
+      requestId,
+      {
+        status: 'granted',
+        respondedAt: new Date(),
+        encryptionKeys: encryptionKeys || [],
+        seenByDoctor: false
+      },
+      { new: true }
+    );
+
+    if (!request) {
+      return res.status(404).json({ error: 'Request not found' });
+    }
+
+    res.json(request);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Patient denies access request
+app.put('/api/access-requests/:requestId/deny', async (req, res) => {
+  try {
+    const { requestId } = req.params;
+
+    const request = await AccessRequest.findByIdAndUpdate(
+      requestId,
+      {
+        status: 'denied',
+        respondedAt: new Date(),
+        seenByDoctor: false
+      },
+      { new: true }
+    );
+
+    if (!request) {
+      return res.status(404).json({ error: 'Request not found' });
+    }
+
+    res.json(request);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Patient revokes previously granted access
+app.put('/api/access-requests/:requestId/revoke', async (req, res) => {
+  try {
+    const { requestId } = req.params;
+
+    const request = await AccessRequest.findByIdAndUpdate(
+      requestId,
+      {
+        status: 'revoked',
+        respondedAt: new Date(),
+        encryptionKeys: [], // Clear encryption keys when revoking
+        seenByDoctor: false
+      },
+      { new: true }
+    );
+
+    if (!request) {
+      return res.status(404).json({ error: 'Request not found' });
+    }
+
+    res.json(request);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Check if doctor has access to patient
+app.get('/api/access-requests/check/:doctorId/:patientId', async (req, res) => {
+  try {
+    const { doctorId, patientId } = req.params;
+
+    const request = await AccessRequest.findOne({
+      doctorId,
+      patientId,
+      status: 'granted'
+    });
+
+    res.json({
+      hasAccess: !!request,
+      request: request || null
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get decryption key for a specific record
+app.get('/api/access-requests/doctor/:doctorId/patient/:patientId/keys/:recordId', async (req, res) => {
+  try {
+    const { doctorId, patientId, recordId } = req.params;
+
+    // Find granted access request
+    const accessRequest = await AccessRequest.findOne({
+      doctorId,
+      patientId,
+      status: 'granted'
+    });
+
+    if (!accessRequest) {
+      return res.status(403).json({ error: 'Access not granted' });
+    }
+
+    // Find encryption key for this record
+    const encryptionKey = accessRequest.encryptionKeys.find(
+      k => k.recordId === recordId
+    );
+
+    if (!encryptionKey) {
+      return res.status(404).json({ error: 'Encryption key not found' });
+    }
+
+    res.json(encryptionKey);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
 });
 
