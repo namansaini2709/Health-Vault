@@ -203,6 +203,8 @@ async function summarizeWithGemini(fileName, fileType, category, pdfText) {
         conditions: [],
         recommendations: [],
         riskFactors: [],
+        patientSummary: 'This document was uploaded but text extraction was not available. Please consult with your healthcare provider to review the contents.',
+        doctorSummary: 'Document uploaded without extracted text content. Manual review recommended to assess clinical significance and incorporate findings into patient care plan.',
         generatedAt: new Date(),
         model: 'no-content'
       };
@@ -317,6 +319,8 @@ function getIntelligentMockSummary(fileName, category) {
         'Follow-up chest imaging in 3 months'
       ],
       riskFactors: ['Progressive lung function decline', 'Risk of respiratory infections', 'Potential for acute exacerbations', 'Reduced exercise tolerance'],
+      patientSummary: 'Your lung tests show some breathing difficulties that need management with inhalers. Using your prescribed medications regularly and avoiding smoke will help you breathe better and prevent flare-ups. We will recheck your lungs in 3 months to track your progress.',
+      doctorSummary: 'Patient presents with COPD and chronic bronchitis with bilateral infiltrates on chest imaging. PFTs show reduced lung capacity. Recommend combination bronchodilator and inhaled corticosteroid therapy, pulmonary rehabilitation, and smoking cessation if applicable. Monitor for acute exacerbations and consider oxygen supplementation if SpO2 <88%. Repeat imaging in 3 months to assess progression.',
       generatedAt: new Date(),
       model: 'intelligent-mock'
     };
@@ -342,6 +346,8 @@ function getIntelligentMockSummary(fileName, category) {
         'Follow prescribed medication regimen strictly'
       ],
       riskFactors: ['Family history of heart disease', 'Hypertension', 'High cholesterol', 'Sedentary lifestyle'],
+      patientSummary: 'Your heart examination shows you have high blood pressure and some irregular heartbeats that need medication management. Take your prescribed heart medications every day, check your blood pressure at home, and eat a low-salt diet. Regular exercise and follow-up appointments will help keep your heart healthy.',
+      doctorSummary: 'Cardiac evaluation reveals hypertension and arrhythmia with possible CAD. ECG shows irregular rhythm. Recommend beta-blocker and ACE inhibitor therapy with aspirin for cardiovascular protection. Monitor BP response and consider Holter monitoring if palpitations persist. Assess for ischemia with stress testing if clinically indicated. Follow-up in 3-6 months with repeat ECG and lipid panel.',
       generatedAt: new Date(),
       model: 'intelligent-mock'
     };
@@ -355,7 +361,9 @@ function getIntelligentMockSummary(fileName, category) {
       medications: ['Metformin 500mg', 'Lisinopril 10mg'],
       conditions: ['Type 2 Diabetes', 'Hypertension'],
       recommendations: ['Follow dosage instructions', 'Monitor blood pressure regularly'],
-      riskFactors: []
+      riskFactors: [],
+      patientSummary: 'Your doctor has prescribed medications to help manage your diabetes and blood pressure. Take them as directed every day, and monitor your blood pressure at home to track how well the treatment is working.',
+      doctorSummary: 'Patient prescribed standard first-line therapy for T2DM and hypertension. Monitor adherence, blood glucose levels, and BP response. Consider titration if targets not met in 3 months. Watch for side effects and medication interactions.'
     },
     'lab-result': {
       text: 'Laboratory test results showing biomarker measurements within reference ranges.',
@@ -363,7 +371,9 @@ function getIntelligentMockSummary(fileName, category) {
       medications: [],
       conditions: ['High Cholesterol'],
       recommendations: ['Follow-up in 3 months', 'Consider lifestyle modifications'],
-      riskFactors: ['Cardiovascular risk']
+      riskFactors: ['Cardiovascular risk'],
+      patientSummary: 'Your blood tests show mostly normal results, but your cholesterol is a bit high. Focus on eating healthier foods with less saturated fat and getting regular exercise. We will recheck your levels in 3 months.',
+      doctorSummary: 'Labs within normal limits except for borderline hyperlipidemia. LDL slightly elevated. Recommend therapeutic lifestyle changes including diet modification and increased physical activity. Consider statin therapy if lipid goals not achieved with lifestyle modifications in 3 months.'
     },
     'scan': {
       text: 'Medical imaging scan showing normal findings with no acute abnormalities detected.',
@@ -371,7 +381,9 @@ function getIntelligentMockSummary(fileName, category) {
       medications: [],
       conditions: [],
       recommendations: ['No immediate follow-up required'],
-      riskFactors: []
+      riskFactors: [],
+      patientSummary: 'Your scan looks normal with no problems found. This is good news and means there are no concerning issues at this time. No immediate follow-up is needed unless you develop new symptoms.',
+      doctorSummary: 'Imaging study shows no acute abnormalities. Normal anatomical structures visualized. No masses, lesions, or acute pathology identified. Routine follow-up as clinically indicated. Consider surveillance imaging only if symptoms develop.'
     },
     'report': {
       text: 'Comprehensive medical report with clinical findings and assessment.',
@@ -379,7 +391,9 @@ function getIntelligentMockSummary(fileName, category) {
       medications: [],
       conditions: [],
       recommendations: ['Follow-up as scheduled'],
-      riskFactors: []
+      riskFactors: [],
+      patientSummary: 'Your medical assessment has been completed and reviewed by your healthcare team. Follow the recommendations given by your doctor and attend your scheduled follow-up appointments to monitor your progress.',
+      doctorSummary: 'Comprehensive clinical evaluation completed with detailed findings documented. Continue current management plan and reassess at scheduled follow-up. Adjust treatment as needed based on patient response and clinical evolution.'
     }
   };
 
@@ -634,6 +648,7 @@ app.post('/api/medical-records', upload.single('file'), async (req, res) => {
     // Automatically share encryption key with doctors who have granted access
     if (encryptionKey && parsedIV) {
       console.log('Sharing encryption key with doctors who have access...');
+      console.log(`Looking for granted access requests for patient: ${patientId} (type: ${typeof patientId})`);
 
       // Find all granted access requests for this patient
       const grantedAccessRequests = await AccessRequest.find({

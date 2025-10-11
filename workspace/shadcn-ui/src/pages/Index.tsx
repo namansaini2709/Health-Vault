@@ -152,9 +152,26 @@ export default function Index() {
                     </div>
                   </DialogContent>
                 </Dialog>
-                <Button variant="outline" size="lg">
-                  Watch Demo
-                </Button>
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" size="lg">
+                      Watch Demo
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-5xl max-h-[90vh] p-0 overflow-hidden bg-black/95 dark:bg-black/95 border-gray-800">
+                    <div className="relative aspect-video w-full">
+                      <video
+                        controls
+                        autoPlay
+                        className="w-full h-full"
+                        poster="/images/video-poster.jpg"
+                      >
+                        <source src="/videos/demo.mp4" type="video/mp4" />
+                        Your browser does not support the video tag.
+                      </video>
+                    </div>
+                  </DialogContent>
+                </Dialog>
               </div>
 
               <div className="flex items-center space-x-8 pt-4">
