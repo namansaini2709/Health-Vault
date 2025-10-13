@@ -12,7 +12,7 @@ import { useNavigate } from "react-router-dom";
 import { HealthVaultService } from "@/lib/healthVault";
 import { toast } from "sonner";
 import PasswordStrength from "@/components/PasswordStrength";
-import axios from "axios";
+import apiClient from "@/lib/apiService";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 
 const ProviderRegister = () => {
@@ -51,7 +51,7 @@ const ProviderRegister = () => {
       if (profilePicture) {
         const formData = new FormData();
         formData.append("file", profilePicture);
-        const response = await axios.post("http://localhost:5000/api/upload-profile-picture", formData, {
+        const response = await apiClient.post("/v1/upload-profile-picture", formData, {
           headers: {
             "Content-Type": "multipart/form-data",
           },

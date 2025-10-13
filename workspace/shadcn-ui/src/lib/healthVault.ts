@@ -51,7 +51,7 @@ export class HealthVaultService {
   static async createPatient(patientData: Omit<Patient, 'id' | 'qrCode' | 'records' | 'createdAt'>): Promise<Patient> {
     try {
       console.log('Creating patient with data:', patientData);
-      const response = await apiClient.post('/patients', patientData);
+      const response = await apiClient.post('/v1/patients', patientData);
       console.log('Patient created successfully:', response.data);
       return response.data;
     } catch (error) {
@@ -69,7 +69,7 @@ export class HealthVaultService {
       }
       
       console.log('Making request to fetch patient with ID:', id);
-      const response = await apiClient.get(`/patients/${id}`);
+      const response = await apiClient.get(`/v1/patients/${id}`);
       console.log('Patient data received:', response.data);
       return response.data;
     } catch (error: unknown) {
@@ -97,7 +97,7 @@ export class HealthVaultService {
 
   static async getAllPatients(): Promise<Patient[]> {
     try {
-      const response = await apiClient.get('/patients');
+      const response = await apiClient.get('/v1/patients');
       return response.data;
     } catch (error) {
       console.error('Error fetching patients:', error);
@@ -176,7 +176,7 @@ export class HealthVaultService {
   static async createDoctor(doctorData: Omit<Doctor, 'id'>): Promise<Doctor> {
     try {
       console.log('Creating doctor with data:', doctorData);
-      const response = await apiClient.post('/doctors', doctorData);
+      const response = await apiClient.post('/v1/doctors', doctorData);
       console.log('Doctor created successfully:', response.data);
       return response.data;
     } catch (error) {
@@ -197,7 +197,7 @@ export class HealthVaultService {
 
   static async getAllDoctors(): Promise<Doctor[]> {
     try {
-      const response = await apiClient.get('/doctors');
+      const response = await apiClient.get('/v1/doctors');
       return response.data;
     } catch (error) {
       console.error('Error fetching doctors:', error);
@@ -228,7 +228,7 @@ export class HealthVaultService {
       }
       
       console.log('Making request to fetch doctor with ID:', id);
-      const response = await apiClient.get(`/doctors/${id}`);
+      const response = await apiClient.get(`/v1/doctors/${id}`);
       console.log('Doctor data received:', response.data);
       return response.data;
     } catch (error: unknown) {

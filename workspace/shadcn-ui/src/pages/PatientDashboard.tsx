@@ -18,6 +18,8 @@ import AccessManagement from '@/components/AccessManagement';
 import { createEncryptedFile, generateEncryptionKey, keyToHexString, storeKeyInSession } from '@/lib/encryptionUtils';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { extractPDFText } from '@/lib/pdfExtractor';
+import apiClient from '@/lib/apiService';
+import EditProfileForm from "@/components/EditProfileForm";
 
 type RecordCategory = 'prescription' | 'lab-result' | 'scan' | 'report' | 'other';
 
@@ -27,6 +29,36 @@ export default function PatientDashboard() {
   const [records, setRecords] = useState<MedicalRecord[]>([]);
   const [showUpload, setShowUpload] = useState(false);
   const [showQR, setShowQR] = useState(false);
+  const [showEditProfile, setShowEditProfile] = useState(false);
+
+  const handleProfileUpdate = async (updatedData: Partial<Patient> & { profilePicture?: File | null }) => {
+    if (!patient) return;
+    try {
+      let profilePictureUrl = patient.profilePictureUrl;
+      if (updatedData.profilePicture) {
+        const formData = new FormData();
+        formData.append("file", updatedData.profilePicture);
+        const response = await apiClient.post("/v1/upload-profile-picture", formData, {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        });
+        profilePictureUrl = response.data.url;
+      }
+
+      const updatedPatientData = { ...updatedData, profilePictureUrl };
+      delete updatedPatientData.profilePicture;
+
+      const updatedPatient = await HealthVaultService.updatePatient(patient.id, updatedPatientData);
+      console.log("Updated patient data:", JSON.stringify(updatedPatient, null, 2));
+      setPatient(updatedPatient);
+      setShowEditProfile(false);
+      toast.success("Profile updated successfully");
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      toast.error("Failed to update profile");
+    }
+  };
 
   useEffect(() => {
     const fetchCurrentUser = async () => {
@@ -256,8 +288,7 @@ export default function PatientDashboard() {
           <Card className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white">
             <CardContent className="p-6">
               <div className="flex items-center space-x-4">
-                <Avatar className="h-16 w-16 border-2 border-white">
-                  {patient.profilePictureUrl && <AvatarImage src={`http://localhost:5000${patient.profilePictureUrl}`} />}
+                  {patient.profilePictureUrl && <AvatarImage src={`http://localhost:3001${patient.profilePictureUrl}`} />}
                   <AvatarFallback className="bg-white text-blue-600 text-lg font-semibold dark:bg-gray-700 dark:text-blue-300">
                     {patient.name.split(' ').map(n => n[0]).join('')}
                   </AvatarFallback>
@@ -265,6 +296,9 @@ export default function PatientDashboard() {
                 <div className="flex-1">
                   <h2 className="text-xl font-semibold">{patient.name}</h2>
                   <p className="text-blue-100 text-sm">Patient ID: {patient.id.slice(-8)}</p>
+                  {patient.tier === 'premium' && (
+                                          <Badge className="mt-2 bg-yellow-400 text-yellow-900">Premium</Badge>
+                  )}
                   <div className="mt-2">
                     <div className="flex items-center justify-between text-sm">
                       <span>Profile Complete</span>
@@ -450,12 +484,15 @@ export default function PatientDashboard() {
             <Card>
               <CardHeader className="text-center pb-2">
                 <Avatar className="h-20 w-20 mx-auto mb-4">
-                  {patient.profilePictureUrl && <AvatarImage src={`http://localhost:5000${patient.profilePictureUrl}`} />}
+                  {patient.profilePictureUrl && <AvatarImage src={`http://localhost:3001${patient.profilePictureUrl}`} />}
                   <AvatarFallback className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white text-xl">
                     {patient.name.split(' ').map(n => n[0]).join('')}
                   </AvatarFallback>
                 </Avatar>
                 <CardTitle className="text-lg">{patient.name}</CardTitle>
+                {patient.tier === 'premium' && (
+                  <Badge className="mt-2 bg-yellow-400 text-yellow-900">Premium</Badge>
+                )}
                 <CardDescription>Patient ID: {patient.id.slice(-8)}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -466,7 +503,7 @@ export default function PatientDashboard() {
                   </div>
                   <Progress value={getProfileCompleteness()} className="h-2" />
                 </div>
-                <Button variant="outline" className="w-full" size="sm">
+                <Button variant="outline" className="w-full" size="sm" onClick={() => setShowEditProfile(true)}>
                   <Edit className="h-4 w-4 mr-2" />
                   Edit Profile
                 </Button>
@@ -532,6 +569,14 @@ export default function PatientDashboard() {
         <QRGenerator
           patient={patient}
           onClose={() => setShowQR(false)}
+        />
+      )}
+
+      {showEditProfile && patient && (
+        <EditProfileForm
+          patient={patient}
+          onClose={() => setShowEditProfile(false)}
+          onSave={handleProfileUpdate}
         />
       )}
     </div>

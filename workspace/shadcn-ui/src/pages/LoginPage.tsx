@@ -7,8 +7,9 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { HealthVaultService } from "@/lib/healthVault";
 import { toast } from "sonner";
-import axios from "axios";
+
 import { ThemeToggle } from "@/components/ui/theme-toggle";
+import apiClient from "@/lib/apiService";
 
 const LoginPage = () => {
   const navigate = useNavigate();
@@ -18,7 +19,7 @@ const LoginPage = () => {
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post("http://localhost:5000/api/login", { email, password });
+      const response = await apiClient.post("/v1/login", { email, password });
       const { token, user, userType } = response.data;
 
       localStorage.setItem('healthvault_auth_token', token);

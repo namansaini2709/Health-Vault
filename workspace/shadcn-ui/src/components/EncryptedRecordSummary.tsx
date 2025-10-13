@@ -54,7 +54,7 @@ export default function EncryptedRecordSummary({ records, patientId, onDelete }:
       }
 
       console.log('Fetching encrypted file...');
-      const response = await fetch(`http://localhost:5000${record.fileUrl}`);
+      const response = await fetch(`http://localhost:5001${record.fileUrl}`);
       if (!response.ok) {
         throw new Error(`Failed to fetch file: ${response.status} ${response.statusText}`);
       }

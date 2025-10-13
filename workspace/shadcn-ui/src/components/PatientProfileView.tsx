@@ -59,7 +59,7 @@ export default function PatientProfileView({ accessRequest, doctorId, onBack }: 
     setDecrypting(true);
     try {
       // Fetch the encrypted file
-      const response = await fetch(`http://localhost:5000${record.fileUrl}`);
+      const response = await fetch(`http://localhost:5001${record.fileUrl}`);
       const encryptedBlob = await response.blob();
       const encryptedFile = new File([encryptedBlob], record.fileName, { type: record.fileType });
 

@@ -1,7 +1,7 @@
 // Access Control Service for managing patient-doctor access permissions
 // Handles access requests, grants, denials, and revocations
 
-const API_BASE_URL = 'http://localhost:5000/api';
+const API_BASE_URL = 'http://localhost:5001/api';
 
 export interface AccessRequest {
   _id: string;

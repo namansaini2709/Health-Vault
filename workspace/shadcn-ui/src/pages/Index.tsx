@@ -31,7 +31,7 @@ export default function Index() {
         emergencyContact: formData.get('emergency')
       };
 
-      const response = await axios.post('http://localhost:5000/api/patients', patientData);
+      const response = await axios.post('http://localhost:5001/api/patients', patientData);
       const patient = response.data;
 
       // Store patient info in localStorage (simulating auth)
@@ -61,7 +61,7 @@ export default function Index() {
         license: formData.get('license')
       };
 
-      const response = await axios.post('http://localhost:5000/api/doctors', doctorData);
+      const response = await axios.post('http://localhost:5001/api/doctors', doctorData);
       const doctor = response.data;
 
       // Store doctor info in localStorage (simulating auth)

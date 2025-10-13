@@ -211,7 +211,7 @@ export default function DoctorDashboard() {
             <Card>
               <CardHeader className="text-center">
                 <Avatar className="h-20 w-20 mx-auto mb-4">
-                  {doctor.profilePictureUrl && <AvatarImage src={`http://localhost:5000${doctor.profilePictureUrl}`} />}
+                  {doctor.profilePictureUrl && <AvatarImage src={`http://localhost:5001${doctor.profilePictureUrl}`} />}
                   <AvatarFallback className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white text-xl">
                     {doctor.name.split(' ').map(n => n[0]).join('')}
                   </AvatarFallback>

@@ -13,11 +13,13 @@
     "bcryptjs": "^3.0.2",
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",
-    "express": "^4.18.2",
+    "express": "^4.21.2",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^7.5.0",
     "multer": "^1.4.5-lts.1",
-    "pdf-parse": "^2.2.1"
+    "pdf-parse": "^2.2.1",
+    "pg": "^8.16.3",
+    "redis": "^5.8.3"
   },
   "devDependencies": {
     "nodemon": "^3.0.1"

@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import ProfilePictureUpload from "@/components/ProfilePictureUpload";
 import { useGoogleLogin } from "@react-oauth/google";
 import axios from "axios";
+import apiClient from "@/lib/apiService";
 import { useNavigate } from "react-router-dom";
 import { HealthVaultService } from "@/lib/healthVault";
 import { toast } from "sonner";
@@ -89,7 +90,7 @@ const PatientRegister = () => {
       if (profilePicture) {
         const formData = new FormData();
         formData.append("file", profilePicture);
-        const response = await axios.post("http://localhost:5000/api/upload-profile-picture", formData, {
+        const response = await apiClient.post("/v1/upload-profile-picture", formData, {
           headers: {
             "Content-Type": "multipart/form-data",
           },
