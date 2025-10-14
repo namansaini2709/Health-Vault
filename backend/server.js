@@ -277,7 +277,7 @@ app.get('/admin/patient/search/:partialId', async (req, res) => {
 });
 
 // Proper entitlements endpoint
-app.get('/v1/entitlements', async (req, res) => {
+app.get('/api/v1/entitlements', async (req, res) => {
   const user_id = req.user?.id;
 
   if (!user_id) {
@@ -377,11 +377,22 @@ app.post('/api/v1/patients', async (req, res) => {
 
       const qr_code = `HV_${newUser.id}_${Date.now().toString(36)}`;
 
-      const patientResult = await client.query(
-        'INSERT INTO patients (id, name, phone, date_of_birth, emergency_contact, qr_code, tier) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *',
-        [newUser.id, name, phone, dateOfBirth, emergencyContact, qr_code, 'free']  // Default to 'free' tier
-      );
-      const newPatient = patientResult.rows[0];
+      // Try to insert with tier column first
+      try {
+        const patientResult = await client.query(
+          'INSERT INTO patients (id, name, phone, date_of_birth, emergency_contact, qr_code, tier) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *',
+          [newUser.id, name, phone, dateOfBirth, emergencyContact, qr_code, 'free']  // Default to 'free' tier
+        );
+        const newPatient = patientResult.rows[0];
+      } catch (insertError) {
+        // If insert fails (possibly because tier column doesn't exist), try without tier
+        console.log('Insert with tier failed, trying without tier:', insertError.message);
+        const patientResult = await client.query(
+          'INSERT INTO patients (id, name, phone, date_of_birth, emergency_contact, qr_code) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
+          [newUser.id, name, phone, dateOfBirth, emergencyContact, qr_code]
+        );
+        const newPatient = patientResult.rows[0];
+      }
 
       await client.query('COMMIT');
 
@@ -472,33 +483,69 @@ app.get('/api/v1/patients', async (req, res) => {
   const { qrCode, email } = req.query;
 
   try {
-    let query = 'SELECT u.id, u.email, u.user_type, p.name, p.phone, p.date_of_birth, p.emergency_contact, p.profile_picture_url, p.qr_code, p.tier FROM users u JOIN patients p ON u.id = p.id';
-    let params = [];
-    let isSingleResult = false;
+    // First, try with tier column
+    try {
+      let query = 'SELECT u.id, u.email, u.user_type, p.name, p.phone, p.date_of_birth, p.emergency_contact, p.profile_picture_url, p.qr_code, p.tier FROM users u JOIN patients p ON u.id = p.id';
+      let params = [];
+      let isSingleResult = false;
 
-    if (qrCode) {
-      query += ' WHERE p.qr_code = $1';
-      params.push(qrCode);
-      isSingleResult = true;
-    } else if (email) {
-      query += ' WHERE u.email = $1';
-      params.push(email);
-      isSingleResult = true;
-    }
-
-    const { rows } = await pool.query(query, params);
-    
-    if (isSingleResult) {
-      if (rows.length > 0) {
-        // When looking up by QR code or email, return just the patient data
-        res.json(rows[0]);
-      } else {
-        // If no patient found with the given qrCode or email
-        return res.status(404).json({ error: 'Patient not found.' });
+      if (qrCode) {
+        query += ' WHERE p.qr_code = $1';
+        params.push(qrCode);
+        isSingleResult = true;
+      } else if (email) {
+        query += ' WHERE u.email = $1';
+        params.push(email);
+        isSingleResult = true;
       }
-    } else {
-      // When getting all patients, return the array
-      res.json(rows);
+
+      const { rows } = await pool.query(query, params);
+      
+      if (isSingleResult) {
+        if (rows.length > 0) {
+          // When looking up by QR code or email, return just the patient data
+          res.json(rows[0]);
+        } else {
+          // If no patient found with the given qrCode or email
+          return res.status(404).json({ error: 'Patient not found.' });
+        }
+      } else {
+        // When getting all patients, return the array
+        res.json(rows);
+      }
+    } catch (queryError) {
+      // If query fails (possibly because tier column doesn't exist), try without tier
+      console.log('Tier column query failed, trying without tier:', queryError.message);
+      let query = 'SELECT u.id, u.email, u.user_type, p.name, p.phone, p.date_of_birth, p.emergency_contact, p.profile_picture_url, p.qr_code FROM users u JOIN patients p ON u.id = p.id';
+      let params = [];
+      let isSingleResult = false;
+
+      if (qrCode) {
+        query += ' WHERE p.qr_code = $1';
+        params.push(qrCode);
+        isSingleResult = true;
+      } else if (email) {
+        query += ' WHERE u.email = $1';
+        params.push(email);
+        isSingleResult = true;
+      }
+
+      const { rows } = await pool.query(query, params);
+      
+      if (isSingleResult) {
+        if (rows.length > 0) {
+          // When looking up by QR code or email, return just the patient data with default tier
+          const patientData = { ...rows[0], tier: 'free' };
+          res.json(patientData);
+        } else {
+          // If no patient found with the given qrCode or email
+          return res.status(404).json({ error: 'Patient not found.' });
+        }
+      } else {
+        // When getting all patients, return the array with default tier
+        const patientsWithTier = rows.map(row => ({ ...row, tier: 'free' }));
+        res.json(patientsWithTier);
+      }
     }
   } catch (error) {
     console.error('Error fetching patients:', error);
@@ -542,16 +589,34 @@ app.get('/api/v1/patients/:id', async (req, res) => {
   const { id } = req.params;
 
   try {
-    const { rows } = await pool.query(
-      'SELECT u.id, u.email, u.user_type, p.name, p.phone, p.date_of_birth, p.emergency_contact, p.profile_picture_url, p.qr_code, p.tier FROM users u JOIN patients p ON u.id = p.id WHERE u.id = $1',
-      [id]
-    );
+    // First, try to fetch with the tier column (in case it exists)
+    try {
+      const { rows } = await pool.query(
+        'SELECT u.id, u.email, u.user_type, p.name, p.phone, p.date_of_birth, p.emergency_contact, p.profile_picture_url, p.qr_code, p.tier FROM users u JOIN patients p ON u.id = p.id WHERE u.id = $1',
+        [id]
+      );
 
-    if (rows.length === 0) {
-      return res.status(404).json({ error: 'Patient not found.' });
+      if (rows.length === 0) {
+        return res.status(404).json({ error: 'Patient not found.' });
+      }
+
+      res.json(rows[0]);
+    } catch (queryError) {
+      // If the query fails (possibly because tier column doesn't exist), try without tier
+      console.log('Tier column query failed, trying without tier:', queryError.message);
+      const { rows } = await pool.query(
+        'SELECT u.id, u.email, u.user_type, p.name, p.phone, p.date_of_birth, p.emergency_contact, p.profile_picture_url, p.qr_code FROM users u JOIN patients p ON u.id = p.id WHERE u.id = $1',
+        [id]
+      );
+
+      if (rows.length === 0) {
+        return res.status(404).json({ error: 'Patient not found.' });
+      }
+
+      // Add a default tier for backward compatibility
+      const patientData = { ...rows[0], tier: 'free' };
+      res.json(patientData);
     }
-
-    res.json(rows[0]);
   } catch (error) {
     console.error('Error fetching patient:', error);
     res.status(500).json({ error: 'Internal Server Error' });
@@ -578,7 +643,7 @@ app.get('/v1/doctors/:id', async (req, res) => {
   }
 });
 
-app.put('/v1/patients/:id', async (req, res) => {
+app.put('/api/v1/patients/:id', async (req, res) => {
   const { id } = req.params;
   const { name, phone, dateOfBirth, emergencyContact, profilePictureUrl, tier } = req.body;
 
