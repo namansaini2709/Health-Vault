@@ -443,3 +443,21 @@ async function encryptAppointment(plain, userKey) {
 
 
 
+it shows profile updated successfully but there are no changes in the dashboard the completion dropped from 60% to 40percent 
+the access tab shows error that failed to load access permisions dev console logs:Error fetching access data: TypeError: Failed to fetch
+    at getPatientPendingRequests (accessControlService.ts:129:26)
+    at fetchAccessData (AccessManagement.tsx:31:52)
+    at AccessManagement.tsx:26:5
+    at Object.react_stack_bottom_frame (react-dom_client.js?v=0fccd5a7:17486:20)
+    at runWithFiberInDEV (react-dom_client.js?v=0fccd5a7:1485:72)
+    at commitHookEffectListMount (react-dom_client.js?v=0fccd5a7:8460:122)
+    at commitHookPassiveMountEffects (react-dom_client.js?v=0fccd5a7:8518:60)
+    at commitPassiveMountOnFiber (react-dom_client.js?v=0fccd5a7:9887:29)
+    at recursivelyTraversePassiveMountEffects (react-dom_client.js?v=0fccd5a7:9868:13)
+    at commitPassiveMountOnFiber (react-dom_client.js?v=0fccd5a7:9984:13)
+fetchAccessData @ AccessManagement.tsx:35Understand this error
+:5001/api/access-requests/patient/94699819-462e-49cc-bdbe-0a782506bd38/granted:1  Failed to load resource: net::ERR_CONNECTION_REFUSEDUnderstand this Error
+i also want you to create a feature to show the current plan and i want you to only make Patient ID: 2506bd38 this as premium so that i can test the appointment feature 
+i am working on a deadline there is a lot of pressure i would really appreciate if you could be more effiecient 
+the profile is still not updating 
+i want you to also add a tab along with overview records ai insights and access with the name of appointments and include all the api and let me search for available doctors in a 10km radius 

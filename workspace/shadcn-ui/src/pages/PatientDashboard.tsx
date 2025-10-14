@@ -15,6 +15,7 @@ import QRGenerator from '@/components/QRGenerator';
 import PatientHealthSummary from '@/components/PatientHealthSummary';
 import EncryptedRecordSummary from '@/components/EncryptedRecordSummary';
 import AccessManagement from '@/components/AccessManagement';
+import CurrentPlan from '@/components/CurrentPlan';
 import { createEncryptedFile, generateEncryptionKey, keyToHexString, storeKeyInSession } from '@/lib/encryptionUtils';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { extractPDFText } from '@/lib/pdfExtractor';
@@ -26,6 +27,7 @@ type RecordCategory = 'prescription' | 'lab-result' | 'scan' | 'report' | 'other
 export default function PatientDashboard() {
   const navigate = useNavigate();
   const [patient, setPatient] = useState<Patient | null>(null);
+  const [entitlements, setEntitlements] = useState<{ tier: string; nearbyScansRemaining: number; scanResetAt: Date } | null>(null);
   const [records, setRecords] = useState<MedicalRecord[]>([]);
   const [showUpload, setShowUpload] = useState(false);
   const [showQR, setShowQR] = useState(false);
@@ -52,6 +54,19 @@ export default function PatientDashboard() {
       const updatedPatient = await HealthVaultService.updatePatient(patient.id, updatedPatientData);
       console.log("Updated patient data:", JSON.stringify(updatedPatient, null, 2));
       setPatient(updatedPatient);
+      
+      // Also refetch entitlements in case tier was updated
+      try {
+        const entitlementsResponse = await apiClient.get('/v1/entitlements');
+        setEntitlements({
+          tier: entitlementsResponse.data.tier,
+          nearbyScansRemaining: entitlementsResponse.data.nearby_scans_remaining,
+          scanResetAt: new Date(entitlementsResponse.data.scan_reset_at)
+        });
+      } catch (error) {
+        console.error('Error fetching entitlements after profile update:', error);
+      }
+      
       setShowEditProfile(false);
       toast.success("Profile updated successfully");
     } catch (error) {
@@ -73,6 +88,24 @@ export default function PatientDashboard() {
       console.log("Patient data on dashboard:", patientData);
       setPatient(patientData);
       setRecords(patientData.records || []);
+      
+      // Fetch entitlements
+      try {
+        const entitlementsResponse = await apiClient.get('/v1/entitlements');
+        setEntitlements({
+          tier: entitlementsResponse.data.tier,
+          nearbyScansRemaining: entitlementsResponse.data.nearby_scans_remaining,
+          scanResetAt: new Date(entitlementsResponse.data.scan_reset_at)
+        });
+      } catch (error) {
+        console.error('Error fetching entitlements:', error);
+        // Default to free tier if entitlements can't be fetched
+        setEntitlements({
+          tier: 'free',
+          nearbyScansRemaining: 0,
+          scanResetAt: new Date()
+        });
+      }
     };
 
     fetchCurrentUser();
@@ -288,6 +321,7 @@ export default function PatientDashboard() {
           <Card className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white">
             <CardContent className="p-6">
               <div className="flex items-center space-x-4">
+                <Avatar>
                   {patient.profilePictureUrl && <AvatarImage src={`http://localhost:3001${patient.profilePictureUrl}`} />}
                   <AvatarFallback className="bg-white text-blue-600 text-lg font-semibold dark:bg-gray-700 dark:text-blue-300">
                     {patient.name.split(' ').map(n => n[0]).join('')}
@@ -509,6 +543,15 @@ export default function PatientDashboard() {
                 </Button>
               </CardContent>
             </Card>
+
+            {/* Current Plan Card */}
+            {entitlements && (
+              <CurrentPlan 
+                tier={entitlements.tier as 'free' | 'premium'} 
+                nearbyScansRemaining={entitlements.nearbyScansRemaining} 
+                scanResetAt={entitlements.scanResetAt} 
+              />
+            )}
 
             {/* QR Code Card */}
             <Card>

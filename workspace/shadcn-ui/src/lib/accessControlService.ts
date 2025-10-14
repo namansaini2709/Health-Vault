@@ -1,7 +1,7 @@
 // Access Control Service for managing patient-doctor access permissions
 // Handles access requests, grants, denials, and revocations
 
-const API_BASE_URL = 'http://localhost:5001/api';
+import apiClient from './apiService';
 
 export interface AccessRequest {
   _id: string;
@@ -41,86 +41,48 @@ export interface EncryptionKey {
  * Send access request to patient after scanning QR code
  */
 export async function sendAccessRequest(doctorId: string, patientQRCode: string): Promise<AccessRequest> {
-  const response = await fetch(`${API_BASE_URL}/access-requests`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ doctorId, patientQRCode })
-  });
-
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.error || 'Failed to send access request');
-  }
-
-  return response.json();
+  const response = await apiClient.post('/access-requests', { doctorId, patientQRCode });
+  return response.data;
 }
 
 /**
  * Get all pending access requests for a doctor
  */
 export async function getDoctorPendingRequests(doctorId: string): Promise<AccessRequest[]> {
-  const response = await fetch(`${API_BASE_URL}/access-requests/doctor/${doctorId}/pending`);
-
-  if (!response.ok) {
-    throw new Error('Failed to fetch pending requests');
-  }
-
-  return response.json();
+  const response = await apiClient.get(`/access-requests/doctor/${doctorId}/pending`);
+  return response.data;
 }
 
 /**
  * Get all patients with granted access for a doctor
  */
 export async function getDoctorGrantedPatients(doctorId: string): Promise<AccessRequest[]> {
-  const response = await fetch(`${API_BASE_URL}/access-requests/doctor/${doctorId}/granted`);
-
-  if (!response.ok) {
-    throw new Error('Failed to fetch granted patients');
-  }
-
-  return response.json();
+  const response = await apiClient.get(`/access-requests/doctor/${doctorId}/granted`);
+  return response.data;
 }
 
 /**
  * Get request history for a doctor (granted, denied, revoked)
  */
 export async function getDoctorRequestHistory(doctorId: string): Promise<AccessRequest[]> {
-  const response = await fetch(`${API_BASE_URL}/access-requests/doctor/${doctorId}/history`);
-
-  if (!response.ok) {
-    throw new Error('Failed to fetch request history');
-  }
-
-  return response.json();
+  const response = await apiClient.get(`/access-requests/doctor/${doctorId}/history`);
+  return response.data;
 }
 
 /**
  * Get unseen count for doctor's request updates
  */
 export async function getUnseenCount(doctorId: string): Promise<{ count: number }> {
-  const response = await fetch(`${API_BASE_URL}/access-requests/doctor/${doctorId}/unseen-count`);
-
-  if (!response.ok) {
-    throw new Error('Failed to fetch unseen count');
-  }
-
-  return response.json();
+  const response = await apiClient.get(`/access-requests/doctor/${doctorId}/unseen-count`);
+  return response.data;
 }
 
 /**
  * Mark a request as seen by doctor
  */
 export async function markRequestAsSeen(requestId: string): Promise<AccessRequest> {
-  const response = await fetch(`${API_BASE_URL}/access-requests/${requestId}/mark-seen`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' }
-  });
-
-  if (!response.ok) {
-    throw new Error('Failed to mark request as seen');
-  }
-
-  return response.json();
+  const response = await apiClient.put(`/access-requests/${requestId}/mark-seen`);
+  return response.data;
 }
 
 // ============================================
@@ -131,78 +93,40 @@ export async function markRequestAsSeen(requestId: string): Promise<AccessReques
  * Get all pending access requests for a patient
  */
 export async function getPatientPendingRequests(patientId: string): Promise<AccessRequest[]> {
-  const response = await fetch(`${API_BASE_URL}/access-requests/patient/${patientId}/pending`);
-
-  if (!response.ok) {
-    throw new Error('Failed to fetch pending requests');
-  }
-
-  return response.json();
+  const response = await apiClient.get(`/access-requests/patient/${patientId}/pending`);
+  return response.data;
 }
 
 /**
  * Get all active (granted) permissions for a patient
  */
 export async function getPatientActivePermissions(patientId: string): Promise<AccessRequest[]> {
-  const response = await fetch(`${API_BASE_URL}/access-requests/patient/${patientId}/granted`);
-
-  if (!response.ok) {
-    throw new Error('Failed to fetch active permissions');
-  }
-
-  return response.json();
+  const response = await apiClient.get(`/access-requests/patient/${patientId}/granted`);
+  return response.data;
 }
 
 /**
  * Patient grants access to doctor
  */
 export async function grantAccess(requestId: string, encryptionKeys: EncryptionKey[]): Promise<AccessRequest> {
-  const response = await fetch(`${API_BASE_URL}/access-requests/${requestId}/grant`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ encryptionKeys })
-  });
-
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.error || 'Failed to grant access');
-  }
-
-  return response.json();
+  const response = await apiClient.put(`/access-requests/${requestId}/grant`, { encryptionKeys });
+  return response.data;
 }
 
 /**
  * Patient denies access request
  */
 export async function denyAccess(requestId: string): Promise<AccessRequest> {
-  const response = await fetch(`${API_BASE_URL}/access-requests/${requestId}/deny`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' }
-  });
-
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.error || 'Failed to deny access');
-  }
-
-  return response.json();
+  const response = await apiClient.put(`/access-requests/${requestId}/deny`);
+  return response.data;
 }
 
 /**
  * Patient revokes previously granted access
  */
 export async function revokeAccess(requestId: string): Promise<AccessRequest> {
-  const response = await fetch(`${API_BASE_URL}/access-requests/${requestId}/revoke`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' }
-  });
-
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.error || 'Failed to revoke access');
-  }
-
-  return response.json();
+  const response = await apiClient.put(`/access-requests/${requestId}/revoke`);
+  return response.data;
 }
 
 // ============================================
@@ -213,27 +137,16 @@ export async function revokeAccess(requestId: string): Promise<AccessRequest> {
  * Check if a doctor has access to a patient
  */
 export async function checkAccess(doctorId: string, patientId: string): Promise<{ hasAccess: boolean; request: AccessRequest | null }> {
-  const response = await fetch(`${API_BASE_URL}/access-requests/check/${doctorId}/${patientId}`);
-
-  if (!response.ok) {
-    throw new Error('Failed to check access');
-  }
-
-  return response.json();
+  const response = await apiClient.get(`/access-requests/check/${doctorId}/${patientId}`);
+  return response.data;
 }
 
 /**
  * Get decryption key for a specific record (if doctor has access)
  */
 export async function getDecryptionKey(doctorId: string, patientId: string, recordId: string): Promise<EncryptionKey> {
-  const response = await fetch(`${API_BASE_URL}/access-requests/doctor/${doctorId}/patient/${patientId}/keys/${recordId}`);
-
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.error || 'Failed to fetch decryption key');
-  }
-
-  return response.json();
+  const response = await apiClient.get(`/access-requests/doctor/${doctorId}/patient/${patientId}/keys/${recordId}`);
+  return response.data;
 }
 
 // ============================================

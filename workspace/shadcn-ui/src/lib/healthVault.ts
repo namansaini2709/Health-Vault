@@ -33,6 +33,7 @@ export interface Patient {
   emergencyContact: string;
   profilePictureUrl?: string;
   qrCode: string;
+  tier?: string;
   records: MedicalRecord[];
   createdAt: string;
 }
@@ -48,7 +49,7 @@ export interface Doctor {
 
 export class HealthVaultService {
   // Patient Management
-  static async createPatient(patientData: Omit<Patient, 'id' | 'qrCode' | 'records' | 'createdAt'>): Promise<Patient> {
+  static async createPatient(patientData: Omit<Patient, 'id' | 'qrCode' | 'records' | 'createdAt' | 'tier'>): Promise<Patient> {
     try {
       console.log('Creating patient with data:', patientData);
       const response = await apiClient.post('/v1/patients', patientData);
@@ -87,7 +88,7 @@ export class HealthVaultService {
 
   static async updatePatient(id: string, patientData: Partial<Patient>): Promise<Patient> {
     try {
-      const response = await apiClient.put(`/patients/${id}`, patientData);
+      const response = await apiClient.put(`/v1/patients/${id}`, patientData);
       return response.data;
     } catch (error) {
       console.error('Error updating patient:', error);
@@ -197,7 +198,7 @@ export class HealthVaultService {
 
   static async getAllDoctors(): Promise<Doctor[]> {
     try {
-      const response = await apiClient.get('/v1/doctors');
+      const response = await apiClient.get('/api/v1/doctors');
       return response.data;
     } catch (error) {
       console.error('Error fetching doctors:', error);
@@ -207,7 +208,7 @@ export class HealthVaultService {
 
   static async getDoctorByEmail(email: string): Promise<Doctor | null> {
     try {
-      const response = await apiClient.get(`/doctors?email=${encodeURIComponent(email)}`);
+      const response = await apiClient.get(`/v1/doctors?email=${encodeURIComponent(email)}`);
       const doctors = response.data;
       return doctors.length > 0 ? doctors[0] : null;
     } catch (error: unknown) {
@@ -307,7 +308,7 @@ export class HealthVaultService {
   static async getPatientByQRCode(qrCode: string): Promise<Patient | null> {
     try {
       console.log('Fetching patient by QR code:', qrCode);
-      const response = await apiClient.get(`/patients?qrCode=${encodeURIComponent(qrCode)}`);
+      const response = await apiClient.get(`/v1/patients?qrCode=${encodeURIComponent(qrCode)}`);
       console.log('Response received:', response);
       console.log('Response data:', response.data);
 

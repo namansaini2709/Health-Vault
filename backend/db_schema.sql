@@ -60,7 +60,8 @@ CREATE TABLE patients (
   date_of_birth DATE,
   emergency_contact TEXT,
   profile_picture_url TEXT,
-  qr_code TEXT
+  qr_code TEXT,
+  tier TEXT DEFAULT 'free' CHECK (tier IN ('free', 'premium'))
 );
 
 CREATE TABLE doctors (
@@ -68,4 +69,22 @@ CREATE TABLE doctors (
   name TEXT NOT NULL,
   specialty TEXT,
   license TEXT
+);
+
+-- Medical records table
+CREATE TABLE medical_records (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  patient_id UUID REFERENCES users(id) NOT NULL,
+  file_name TEXT NOT NULL,
+  file_type TEXT,
+  file_path TEXT NOT NULL,
+  category TEXT CHECK (category IN ('prescription', 'lab-result', 'scan', 'report', 'other')),
+  upload_date TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  summary TEXT,
+  encryption_key TEXT,        -- Encrypted encryption key stored on backend
+  encryption_iv JSONB,        -- IV and other encryption metadata
+  original_file_name TEXT,    -- Original name before encryption
+  original_file_type TEXT,    -- Original file type
+  pdf_text TEXT,              -- Extracted text from PDFs for AI analysis
+  ai_summary JSONB            -- JSON containing AI-generated summary
 );
